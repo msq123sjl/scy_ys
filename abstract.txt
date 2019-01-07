@@ -1,0 +1,9 @@
+输出                                                 输入
+IO6     OT1 开阀                               IN1        IO10     阀门开
+IO7     OT2 关阀                               IN2        IO11     阀门关
+IO8     OT3 UPS开关                        IN3        IO12     市电检测
+IO9     OT4                                       IN4         IO13
+IO16   OT5                                       IN5         IO14
+IO17   OT6                                       IN6         IO15
+
+
