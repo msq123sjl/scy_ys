@@ -447,6 +447,7 @@ QTableView{
     <addaction name="action_Diagnose"/>
     <addaction name="separator"/>
     <addaction name="action_HardwareTest"/>
+    <addaction name="action_Calibration"/>
    </widget>
    <addaction name="menuWenjian"/>
    <addaction name="menu"/>
@@ -523,6 +524,11 @@ QTableView{
   <action name="action_COD">
    <property name="text">
     <string>COD控制</string>
+   </property>
+  </action>
+  <action name="action_Calibration">
+   <property name="text">
+    <string>模拟量校准</string>
    </property>
   </action>
  </widget>

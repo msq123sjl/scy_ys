@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     frmdiagnose.cpp \
     api/spi_drivers.cpp \
     frmmain.cpp \
-    frmcod.cpp
+    frmcod.cpp \
+    frmcalibration.cpp
 
 HEADERS  += \
     frmconfig.h \
@@ -58,7 +59,8 @@ HEADERS  += \
     frmdiagnose.h \
     api/spi_drivers.h \
     frmmain.h \
-    frmcod.h
+    frmcod.h \
+    frmcalibration.h
 
 FORMS    += \
     frmconfig.ui \
@@ -72,7 +74,8 @@ FORMS    += \
     frmdiagnose.ui \
     frmmain.ui \
     frmhardwaretest.ui \
-    frmcod.ui
+    frmcod.ui \
+    frmcalibration.ui
 
 DESTDIR=bin
 

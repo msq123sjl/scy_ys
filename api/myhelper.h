@@ -586,6 +586,11 @@ public:
         return res;
     }
 
+    static float 
+    float_div_float(float a, float b)
+    {
+        return b ? a / (double) b * 1000.00 : 0;
+    }
 
     //加密认证
     static bool MD5_EncryptDecrypt(QByteArray key)

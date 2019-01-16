@@ -90,7 +90,7 @@ volatile bool myApp::Door_FLG=0;
 volatile bool myApp::Addcard_FLG=0;
 volatile bool myApp::Deletecard_FLG=0;
 
-
+extern stAnalog_para Analog[ANALOG_CNT];
 
 Com_para COM[6]={
     {"ttyS1",9600,8,0,0,1000,1000},
@@ -182,7 +182,29 @@ void myApp::ReadConfig()
         TCP[i].ServerIP=temp[1];
         TCP[i].ServerPort=temp[2];
     }
-
+    QString str;
+    int iLoop,jLoop;
+    stAnalog_para *pAnalog;
+    QStringList tempPara;
+    for(iLoop = 0; iLoop < ANALOG_CNT; iLoop++){
+        str =  set->value(QString("AnalogPara%1").arg(iLoop+1)).toString();
+        //qDebug()<<QString("AnalogPara%1=%2").arg(iLoop+1).arg(str);
+        temp =str.split("|");
+        if(temp.size() != 66){
+            continue;
+        }
+        pAnalog = &Analog[iLoop];
+        pAnalog->min_Ia = temp[0].toInt();
+        pAnalog->max_Ia = temp[1].toInt();
+        for(jLoop = 0;jLoop< CALIBRATION_CNT;jLoop++){
+            tempPara = temp[jLoop+2].split(",");
+            pAnalog->para[jLoop].min_ad = tempPara[0].toInt();
+            pAnalog->para[jLoop].max_ad = tempPara[1].toInt();
+            pAnalog->para[jLoop].Ia_base= tempPara[2].toInt();
+            pAnalog->para[jLoop].slope  = tempPara[3].toFloat();
+            //qDebug()<<QString("min_ad=%1;max_ad=%2;slope=%3").arg(pAnalog->para[jLoop].min_ad).arg(pAnalog->para[jLoop].max_ad).arg(pAnalog->para[jLoop].slope);
+        }
+    }
     myApp::RespondOpen=set->value("RespondOpen").toBool();
     myApp::AutoUpdateOpen=set->value("AutoUpdateOpen").toBool();
     myApp::AutoUpdateIP=set->value("AutoUpdateIP").toString();
@@ -195,6 +217,7 @@ void myApp::ReadConfig()
 
 void myApp::WriteConfig()//保存配置信息
 {    
+    int iLoop;
     QString fileName=myApp::AppPath+"config_scy.txt";
     QSettings *set=new QSettings(fileName,QSettings::IniFormat);
 
@@ -217,6 +240,12 @@ void myApp::WriteConfig()//保存配置信息
     set->setValue("ConfigUart4",myApp::ConfigUart4);
     set->setValue("ConfigUart5",myApp::ConfigUart5);
     set->setValue("ConfigUart6",myApp::ConfigUart6);
+
+    QStringList AnalogParaList = myApp::AnalogParaToStringList();
+    for(iLoop=0; iLoop<AnalogParaList.size();iLoop++) {
+        //qDebug()<<QString("str[%1]").arg(myApp::AnalogParaList[iLoop]);
+        set->setValue(QString("AnalogPara%1").arg(iLoop+1),AnalogParaList[iLoop]);
+    }
 
     set->setValue("ServerAddr1",myApp::ServerAddr1);
     set->setValue("ServerAddr2",myApp::ServerAddr2);
@@ -402,5 +431,41 @@ void myApp::WriteIoConfig()//保存配置信息
     delete set;
 }
 
+void myApp::AnalogPortInit()
+{
+    int iLoop,jLoop;
+    //QString AnalogPara;
+    stAnalog_para *pAnalog;
+    for(iLoop = 0; iLoop < ANALOG_CNT; iLoop++){
+        //4~20mA
+        pAnalog = &Analog[iLoop];
+        pAnalog->min_Ia = 4;
+        pAnalog->max_Ia = 20;
+        for(jLoop = 0; jLoop < CALIBRATION_CNT; jLoop++){
+            pAnalog->para[jLoop].min_ad     = 0;
+            pAnalog->para[jLoop].max_ad     = 65535;
+            pAnalog->para[jLoop].Ia_base    = 0;
+            pAnalog->para[jLoop].slope      = (5*1000*10)/(float)65536;
+        }
+    }
+}
 
+QStringList myApp::AnalogParaToStringList()
+{
+    int iLoop,jLoop;
+    QString AnalogPara;
+    QStringList AnalogParaList;
+    stAnalog_para *pAnalog;
+    for(iLoop = 0; iLoop < ANALOG_CNT; iLoop++){
+        pAnalog = &Analog[iLoop];
+        AnalogPara = QString("%1|%2").arg(pAnalog->min_Ia).arg(pAnalog->max_Ia);
+        for(jLoop = 0; jLoop < CALIBRATION_CNT; jLoop++){
+            AnalogPara += QString("|%1,%2,%3,%4").arg(pAnalog->para[jLoop].min_ad).arg(pAnalog->para[jLoop].max_ad).arg(pAnalog->para[jLoop].Ia_base).arg(pAnalog->para[jLoop].slope);
+        }
+        //qDebug()<<QString("str[%1]").arg(AnalogPara);
+        AnalogParaList.append(AnalogPara);
+    }
+    return AnalogParaList;
+    //qDebug()<<myApp::AnalogParaList;
+}
 

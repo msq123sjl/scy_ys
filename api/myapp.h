@@ -4,6 +4,25 @@
 #include <QString>
 #include "../qextserial/qextserialport.h"
 
+#define CALIBRATION_CNT 64
+#define ANALOG_CNT 8   //不能超过8路
+
+typedef struct _CALIBRATION_PARA
+{
+    unsigned int min_ad;
+    unsigned int max_ad;
+    unsigned int Ia_base;
+    float slope;
+}stCalibration;
+
+typedef struct __ANALOG_PARA
+{
+    unsigned int min_Ia;
+    unsigned int max_Ia;
+    stCalibration para[CALIBRATION_CNT];
+
+}stAnalog_para;
+
 typedef struct __COM_PARA
 {
     const QString Name;       //串口名称
@@ -133,6 +152,8 @@ public:
     static void WriteLocalNet();
     void PronumberChange(int number);
     void CodOverproofChange(int number);
+    static void AnalogPortInit();  //模拟通道数据初始化
+    static QStringList AnalogParaToStringList();
 
 };
 

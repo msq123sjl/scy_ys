@@ -29,7 +29,7 @@ private slots:
 
     void on_btn_Cancel_clicked();
 
-    void on_btn_setsave_clicked();
+    //void on_btn_setsave_clicked();
 
 
 private:

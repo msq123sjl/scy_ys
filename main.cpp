@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
             query_memory.exec("create table CacheRtd(GetTime DATETIME(20),Name NVARCHAR(20),Code NVARCHAR(10),Rtd NVARCHAR(20),Total NVARCHAR(20),Flag NVARCHAR(5),ErrorNums NVARCHAR(2));");
         }
         //程序加载时先加载所有配置信息
+        myApp::AnalogPortInit();
         myApp::ReadConfig();
         myApp::ReadIoConfig();
 

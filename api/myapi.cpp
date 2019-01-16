@@ -739,7 +739,7 @@ void myAPI::Insert_Message_Count(int CN,int flag,QString dt)
 
 }
 
-
+//Per=0表示关阀请求，Per=100表示开阀请求
 void myAPI::Insert_Message_Control(int CN,int flag,QString dt,int valvenum,int per,bool isok,int contyp,QString str_tmp)
 {
     QString content;

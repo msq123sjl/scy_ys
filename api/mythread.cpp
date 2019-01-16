@@ -8,6 +8,8 @@
 #include "api/myapp.h"
 #include <QList>
 #include <QSqlError>
+#include "frmcalibration.h"
+#include <algorithm>
 
 extern myAPI protocol;
 extern enum Status{IsOpen,IsClose,IsError}Valve_CurrentStatus,Valve_RightStatus,Catchment_CurrentStatus,Catchment_RightStatus,reflux_CurrentStatus;
@@ -267,7 +269,8 @@ void SendMessage::run()
         sleep(1);
         api.SendData_Master(3097,myApp::RespondOpen);//ok
         sleep(1);
-        api.SendData_Master(3071,myApp::RespondOpen);//ok
+        //api.SendData_Master(3071,myApp::RespondOpen);//ok
+        api.SendData_Master(3071,0);
         sleep(1);
         api.SendData_Master(9012,0);
         sleep(1);
@@ -340,7 +343,10 @@ void DB_Clear::run()
 
 }
 
-extern float ad_value[8];
+extern float ad_version;
+extern float ad_value[ANALOG_CNT];
+extern float ad_midvalue[ANALOG_CNT];
+extern stAnalog_para Analog[ANALOG_CNT];
 void SPI_Read_ad::run()
 {
     QSqlQuery query;
@@ -348,18 +354,41 @@ void SPI_Read_ad::run()
     QString Code;
     QString Name;
     QString  Unit;
+    int iLoop,jLoop;
     int Dec;
     int Port;
+    float IaValue;
+    static float ad[ANALOG_CNT][8];
+    static float ad_sort[ANALOG_CNT][8];
     double Rtd;
     QString flag="D";
     SPI_Init();
-
+    memset(ad,0,sizeof(ad));
+    memset(ad_sort,0,sizeof(ad_sort));
+    
     while(true)
     {
         if(spi_read_ad()==true)
             flag="N";
         else
             flag="D";
+        
+        if(ad_version > 0){
+            for(jLoop=0; jLoop<ANALOG_CNT; jLoop++){
+                /*取最新的8个值*/
+                for(iLoop=7; iLoop>0; iLoop--){
+                    ad[jLoop][iLoop] = ad[jLoop][iLoop-1];
+                }
+                ad[jLoop][0] = ad_value[jLoop];
+                qDebug()<<QString("Port:")<<jLoop;
+                qDebug()<<QString("ad:     [%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad[jLoop][0]).arg(ad[jLoop][1]).arg(ad[jLoop][2]).arg(ad[jLoop][3]).arg(ad[jLoop][4]).arg(ad[jLoop][5]).arg(ad[jLoop][6]).arg(ad[jLoop][7]);
+                memcpy(ad_sort[jLoop],ad[jLoop],sizeof(ad[jLoop]));
+                qSort(ad_sort[jLoop],ad_sort[jLoop]+8);
+                qDebug()<<QString("ad_sort:[%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad_sort[jLoop][0]).arg(ad_sort[jLoop][1]).arg(ad_sort[jLoop][2]).arg(ad_sort[jLoop][3]).arg(ad_sort[jLoop][4]).arg(ad_sort[jLoop][5]).arg(ad_sort[jLoop][6]).arg(ad_sort[jLoop][7]);
+                ad_midvalue[jLoop] = (ad_sort[jLoop][2] + ad_sort[jLoop][3] + ad_sort[jLoop][4] + ad_sort[jLoop][5])/float(4.00);
+                qDebug()<<QString("ad_midvalue:")<<ad_midvalue[jLoop];
+            }
+        }
         query.exec("select * from [ParaInfo] where [UseChannel] like 'AN%'");
         while(query.next())
         {
@@ -368,7 +397,12 @@ void SPI_Read_ad::run()
             Unit=query.value(2).toString();
             Port=query.value(3).toString().right(1).toInt();
             Dec=query.value(15).toInt();
-            Rtd=api.AnalogConvert(ad_value[Port],query.value(7).toDouble(),query.value(8).toDouble(),query.value(6).toString());
+            if(ad_version > 0){
+                IaValue = frmcalibration::AD_to_Ia(ad_midvalue[Port],&Analog[Port],1);
+            }else{
+                IaValue = ad_value[Port];
+            }
+            Rtd=api.AnalogConvert((double)IaValue,query.value(7).toDouble(),query.value(8).toDouble(),query.value(6).toString());
             api.CacheDataProc(Rtd,0,flag,Dec,Name,Code,Unit);
         }
         msleep(2000);

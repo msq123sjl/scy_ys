@@ -7,11 +7,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "api/myhelper.h"
+#include "myapp.h"
+#include "frmcalibration.h"
 #include <stdio.h>
 #include <QRegExp>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
-float ad_value[8];
+float ad_version = 0;
+float ad_value[ANALOG_CNT];
+float ad_midvalue[ANALOG_CNT];
+stAnalog_para Analog[ANALOG_CNT];
 
 static void pabort(const char *s)
 {
@@ -78,6 +83,7 @@ int spi_read_ad()
     char wr_buf[]={"##FC=1;CRC=6740\r\n"};
     QRegExp  Ex;
     int pos;
+    static char first_flag = 0;
 
     if( write(spi_fd, wr_buf, ARRAY_SIZE(wr_buf)) != ARRAY_SIZE(wr_buf))
         perror("Write Error");
@@ -92,7 +98,19 @@ int spi_read_ad()
         {
             printf("Read Empty\n");
             return false;
-     }
+        }
+        qDebug()<<QString("rd_buf:%1").arg(QLatin1String(rd_buf));
+        if(0 == first_flag){
+            first_flag = 1;
+            Ex.setPattern("Version=([0-9|.]+)");
+            pos=Ex.indexIn(rd_buf);
+            if(pos != -1){
+                ad_version=Ex.cap(1).toFloat();
+            }
+            else {
+                ad_version=0;
+            }   
+        }
 
         Ex.setPattern("U0=([0-9|.]+)");
         pos=Ex.indexIn(rd_buf);
@@ -102,7 +120,7 @@ int spi_read_ad()
         else {
             ad_value[0]=0;
         }
-
+        //qDebug()<<QString("ad_value[0]:%1").arg(ad_value[0]);
         Ex.setPattern("U1=([0-9|.]+)");
         pos=Ex.indexIn(rd_buf);
         if(pos != -1){

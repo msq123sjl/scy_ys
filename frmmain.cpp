@@ -14,6 +14,7 @@
 #include "frmsampler.h"
 #include "frmvalve.h"
 #include "frmdiagnose.h"
+#include "frmcalibration.h"
 #include "frmcod.h"
 #include<QProcess>
 #include <sys/socket.h>
@@ -47,7 +48,7 @@ QTimer *tcpSocketTimer1=NULL;
 QTimer *tcpSocketTimer2=NULL;
 QTimer *tcpSocketTimer3=NULL;
 QTimer *tcpSocketTimer4=NULL;
-
+extern float ad_version;
 #define  Valve_TimeOut   150
 frmMain::frmMain(QWidget *parent) :
     QMainWindow(parent),
@@ -171,7 +172,7 @@ void frmMain::InitForm()
     connect(ui->action_Import,SIGNAL(triggered()),this,SLOT(ShowForm()));
     connect(ui->action_Export,SIGNAL(triggered()),this,SLOT(ShowForm()));
     connect(ui->action_Diagnose,SIGNAL(triggered()),this,SLOT(ShowForm()));
-
+    connect(ui->action_Calibration,SIGNAL(triggered()),this,SLOT(ShowForm()));
 }
 
 void frmMain::get_rain_signal()
@@ -406,6 +407,22 @@ void frmMain::ShowForm()
         frmdiagnose *d=new frmdiagnose();
         d->showFullScreen();
 
+    }
+    
+    if (triggerName=="action_Calibration"){           //模拟量校准
+        if(myApp::Login){
+            if(ad_version > 0){
+                frmcalibration *d=new frmcalibration();
+                d->showFullScreen();
+            }else{
+                myHelper::ShowMessageBoxInfo(QObject::trUtf8("请升级AD板程序"));
+            }
+         }else{
+            //frmcalibration *d=new frmcalibration();
+            //d->showFullScreen();
+            myHelper::ShowMessageBoxInfo("请登录!");
+         }
+    
     }
 
 }
