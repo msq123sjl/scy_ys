@@ -100,18 +100,19 @@ int spi_read_ad()
             return false;
         }
         qDebug()<<QString("rd_buf:%1").arg(QLatin1String(rd_buf));
-        if(0 == first_flag){
-            first_flag = 1;
+        if(first_flag < 10){
+            first_flag++;
             Ex.setPattern("Version=([0-9|.]+)");
             pos=Ex.indexIn(rd_buf);
             if(pos != -1){
                 ad_version=Ex.cap(1).toFloat();
+                first_flag = 10;
             }
             else {
                 ad_version=0;
             }   
         }
-
+        
         Ex.setPattern("U0=([0-9|.]+)");
         pos=Ex.indexIn(rd_buf);
         if(pos != -1){

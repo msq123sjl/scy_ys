@@ -380,13 +380,13 @@ void SPI_Read_ad::run()
                     ad[jLoop][iLoop] = ad[jLoop][iLoop-1];
                 }
                 ad[jLoop][0] = ad_value[jLoop];
-                qDebug()<<QString("Port:")<<jLoop;
-                qDebug()<<QString("ad:     [%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad[jLoop][0]).arg(ad[jLoop][1]).arg(ad[jLoop][2]).arg(ad[jLoop][3]).arg(ad[jLoop][4]).arg(ad[jLoop][5]).arg(ad[jLoop][6]).arg(ad[jLoop][7]);
+                //qDebug()<<QString("Port:")<<jLoop;
+                //qDebug()<<QString("ad:     [%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad[jLoop][0]).arg(ad[jLoop][1]).arg(ad[jLoop][2]).arg(ad[jLoop][3]).arg(ad[jLoop][4]).arg(ad[jLoop][5]).arg(ad[jLoop][6]).arg(ad[jLoop][7]);
                 memcpy(ad_sort[jLoop],ad[jLoop],sizeof(ad[jLoop]));
                 qSort(ad_sort[jLoop],ad_sort[jLoop]+8);
-                qDebug()<<QString("ad_sort:[%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad_sort[jLoop][0]).arg(ad_sort[jLoop][1]).arg(ad_sort[jLoop][2]).arg(ad_sort[jLoop][3]).arg(ad_sort[jLoop][4]).arg(ad_sort[jLoop][5]).arg(ad_sort[jLoop][6]).arg(ad_sort[jLoop][7]);
+                //qDebug()<<QString("ad_sort:[%1][%2][%3][%4][%5][%6][%7][%8]").arg(ad_sort[jLoop][0]).arg(ad_sort[jLoop][1]).arg(ad_sort[jLoop][2]).arg(ad_sort[jLoop][3]).arg(ad_sort[jLoop][4]).arg(ad_sort[jLoop][5]).arg(ad_sort[jLoop][6]).arg(ad_sort[jLoop][7]);
                 ad_midvalue[jLoop] = (ad_sort[jLoop][2] + ad_sort[jLoop][3] + ad_sort[jLoop][4] + ad_sort[jLoop][5])/float(4.00);
-                qDebug()<<QString("ad_midvalue:")<<ad_midvalue[jLoop];
+                //qDebug()<<QString("ad_midvalue:")<<ad_midvalue[jLoop];
             }
         }
         query.exec("select * from [ParaInfo] where [UseChannel] like 'AN%'");
