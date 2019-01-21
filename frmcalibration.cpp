@@ -108,6 +108,7 @@ void frmcalibration::CalibrationOrMeasure(char flag)
         Unit           =Ex.cap(3);
     }
     qDebug()<<QString("value_min:%1 value_max:%2 Unit:%3 step:%4 SampleResistor:%5").arg(value_min).arg(value_max).arg(Unit).arg(step).arg(frmcalibration::SampleResistor);
+    model_calibration->removeRows(0,model_calibration->rowCount());
     ui->tableView->scrollToTop();
     for(value = value_min; value <= value_max;){
         //column = 0;
