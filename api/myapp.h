@@ -109,6 +109,7 @@ public:
     static volatile int     In_reflux_open;
     static volatile int     In_reflux_close;
     static volatile int     In_power;
+    static volatile int     In_level;
 
     static volatile bool Door_FLG;//=1需要开门
     static volatile bool Addcard_FLG;//=1需要开卡
@@ -135,11 +136,15 @@ public:
     static QString AutoUpdateIP;
     static QByteArray Key;
     static bool COM3ToServerOpen;
-    static int Sample_Flag;
-    static int BottleId;
+    static volatile int Sample_Flag;
+    static volatile int BottleId;
 
-    static int Cod_Flag;
-    static int COD_Isok;
+    static volatile int COD_Flag;
+    static volatile int COD_Isok;
+    static volatile int TOC_Flag;
+    static volatile int TOC_Isok;
+    static volatile int NH3_Flag;
+    static volatile int NH3_Isok;
 
     static int Sample_Free;
     static int  Valve_cmd_status;

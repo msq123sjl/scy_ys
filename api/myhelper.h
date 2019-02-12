@@ -585,6 +585,17 @@ public:
         }
         return res;
     }
+    
+    static unsigned char LRC(char *databuff,int len)
+    {
+        unsigned char res=0;
+        for(int i=0;i<len;i++)
+        {
+            res+=*databuff++;
+        }
+        res = (~res) + 1;
+        return res;
+    }
 
     static float 
     float_div_float(float a, float b)

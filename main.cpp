@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
             myHelper::ShowMessageBoxError("数据库文件不存在,程序将自动关闭！");
             return 1;
         }
-
         QSqlDatabase DbConn;                //
         DbConn=QSqlDatabase::addDatabase("QSQLITE");
         DbConn.setDatabaseName("/mnt/sdcard/ys_scy.db");

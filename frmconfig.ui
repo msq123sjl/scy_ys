@@ -99,7 +99,7 @@ QTableView{
      <enum>QFrame::NoFrame</enum>
     </property>
     <property name="currentIndex">
-     <number>8</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="page">
      <widget class="QGroupBox" name="gbox_general">
@@ -2490,8 +2490,8 @@ QTableView{
      <widget class="QGroupBox" name="gbox_localNet">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>10</y>
+        <x>0</x>
+        <y>30</y>
         <width>651</width>
         <height>461</height>
        </rect>
@@ -3323,7 +3323,7 @@ QTableView{
          </rect>
         </property>
         <property name="currentIndex">
-         <number>7</number>
+         <number>12</number>
         </property>
         <item>
          <property name="text">
@@ -3383,6 +3383,11 @@ QTableView{
         <item>
          <property name="text">
           <string>S_IN12</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>无液位</string>
          </property>
         </item>
        </widget>

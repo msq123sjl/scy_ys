@@ -36,5 +36,7 @@ void frmcod::on_btn_StartWork_clicked()
         myHelper::ShowMessageBoxError("请切换到运维模式");
         return ;
     }
-    myApp::Cod_Flag=1;
+    myApp::COD_Flag=1;
+    myApp::TOC_Flag=1;
+    myApp::NH3_Flag=1;
 }

@@ -245,6 +245,10 @@ void frmconfig::on_btn_io_clicked()
         if(p_index>5)p_index-=2;
         ui->comboIn_power->setCurrentIndex(p_index);
 
+        p_index=myApp::In_level-10;
+        if(p_index>5)p_index-=2;
+        ui->comboIn_yewei->setCurrentIndex(p_index);
+
         ui->stackedWidget_config->setCurrentIndex(8);
 }
 
@@ -1122,6 +1126,35 @@ void frmconfig::on_btn_SaveIo_clicked()
     case 11: myApp::In_power=23;
     break;
     default:break;
+    }
+    //液位检测
+    switch (ui->comboIn_yewei->currentIndex()){
+    case 0: myApp::In_level=10;
+    break;
+    case 1: myApp::In_level=11;
+    break;
+    case 2: myApp::In_level=12;
+    break;
+    case 3: myApp::In_level=13;
+    break;
+    case 4: myApp::In_level=14;
+    break;
+    case 5: myApp::In_level=15;
+    break;
+    case 6: myApp::In_level=18;
+    break;
+    case 7: myApp::In_level=19;
+    break;
+    case 8: myApp::In_level=20;
+    break;
+    case 9: myApp::In_level=21;
+    break;
+    case 10: myApp::In_level=22;
+    break;
+    case 11: myApp::In_level=23;
+    break;
+    default: myApp::In_level=24;
+    break;
     }
     myApp::WriteIoConfig();
 

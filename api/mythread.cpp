@@ -261,7 +261,7 @@ void SendMessage::run()
         sleep(10);
         {
         myAPI api;
-        api.SendData_Status(4);             //3017状态
+        api.SendData_Status(4);             //3071状态
         sleep(1);
         api.SendData_Master(2011,0);
         sleep(1);
@@ -270,7 +270,7 @@ void SendMessage::run()
         api.SendData_Master(3097,myApp::RespondOpen);//ok
         sleep(1);
         //api.SendData_Master(3071,myApp::RespondOpen);//ok
-        api.SendData_Master(3071,0);
+        //api.SendData_Master(3071,0);
         sleep(1);
         api.SendData_Master(9012,0);
         sleep(1);

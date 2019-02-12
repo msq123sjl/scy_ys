@@ -156,6 +156,13 @@ void frmMain::InitForm()
     connect(timerSample,SIGNAL(timeout()),this,SLOT(CheckSampleCmd()));
     timerSample->start();
 
+    /*timerSampleMake=new QTimer(this);
+    timerSampleMake->setInterval(28800000);
+    myApp::TOC_Flag=1;
+    myApp::NH3_Flag=1;
+    connect(timerSampleMake,SIGNAL(timeout()),this,SLOT(Cod_Flag_Changed()));
+    timerSampleMake->start();*/
+
     statusTimer=new QTimer(this);
     statusTimer->setInterval(2000);
     connect(statusTimer,SIGNAL(timeout()),this,SLOT(Status()));
@@ -198,7 +205,10 @@ void frmMain::Sample_Flag_Changed()
 }
 void frmMain::Cod_Flag_Changed()
 {
-    myApp::Cod_Flag=1;
+    myApp::COD_Flag=1;
+    myApp::TOC_Flag=1;
+    myApp::NH3_Flag=1;
+    qDebug()<<"START Sample making";
 }
 
 void frmMain::OverFlag(int contyp,int drainsta,int catchmentsta,int issample,QString str_tmp)//超标次数上限
@@ -234,14 +244,14 @@ void frmMain::OverFlag(int contyp,int drainsta,int catchmentsta,int issample,QSt
         }
         if(issample)//本地留样
         {
-            myApp::Cod_Flag=1;
+            myApp::COD_Flag=1;
         }
         break;
 
     case 2: //自动控制
         if(issample)//自动留样
         {
-            myApp::Cod_Flag=1;
+            myApp::COD_Flag=1;
         }
         switch (drainsta) {
         case 1://自动开排水阀门
@@ -291,7 +301,7 @@ void frmMain::OverFlag(int contyp,int drainsta,int catchmentsta,int issample,QSt
         }
         if(issample)//远程留样
         {
-            myApp::Cod_Flag=1;
+            myApp::COD_Flag=1;
         }
         break;
 

@@ -51,6 +51,8 @@ volatile int     myApp::In_catchment_close=13;
 volatile int     myApp::In_reflux_open=14;
 volatile int     myApp::In_reflux_close=15;
 volatile int     myApp::In_power=18;
+volatile int     myApp::In_level=24;  //24表示没有液位信号
+
 QString myApp::DoorStatus="OFF";
 QString myApp::LVStatus="Error";
 QString myApp::LocalIP="192.168.1.112";
@@ -78,10 +80,15 @@ QString myApp::ServerAddr4="false|192.168.1.200|8800";
 QString myApp::AutoUpdateIP="192.168.1.200";
 QByteArray myApp::Key;
 bool myApp::COM3ToServerOpen=false;
-int myApp::Sample_Flag=0;
-int myApp::BottleId=-1;
-int myApp::Cod_Flag=0;
-int myApp::COD_Isok=0;
+volatile int myApp::Sample_Flag=0;
+volatile int myApp::BottleId=-1;
+volatile int myApp::COD_Flag=0;
+volatile int myApp::COD_Isok=false;
+volatile int myApp::TOC_Flag=0;
+volatile int myApp::TOC_Isok=false;
+volatile int myApp::NH3_Flag=0;
+volatile int myApp::NH3_Isok=false;
+
 
 int myApp::Sample_Free=0;
 int myApp::Valve_cmd_status=0;
@@ -404,7 +411,9 @@ void myApp::ReadIoConfig()
     myApp::In_catchment_open=set->value("In_catchment_open").toInt();
     myApp::In_catchment_close=set->value("In_catchment_close").toInt();
     myApp::In_reflux_open=set->value("In_reflux_open").toInt();
+    myApp::In_reflux_close=set->value("In_reflux_close").toInt();
     myApp::In_power=set->value("In_power").toInt();
+    myApp::In_level=set->value("In_level").toInt();
     set->endGroup();
     delete set;
 }
@@ -427,6 +436,7 @@ void myApp::WriteIoConfig()//保存配置信息
     set->setValue("In_reflux_open",myApp::In_reflux_open);
     set->setValue("In_reflux_close",myApp::In_reflux_close);
     set->setValue("In_power",myApp::In_power);
+    set->setValue("In_level",myApp::In_level);
     set->endGroup();
     delete set;
 }

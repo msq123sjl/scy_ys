@@ -99,7 +99,7 @@ int spi_read_ad()
             printf("Read Empty\n");
             return false;
         }
-        qDebug()<<QString("rd_buf:%1").arg(QLatin1String(rd_buf));
+        //qDebug()<<QString("rd_buf:%1").arg(QLatin1String(rd_buf));
         if(first_flag < 10){
             first_flag++;
             Ex.setPattern("Version=([0-9|.]+)");

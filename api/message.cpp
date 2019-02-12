@@ -15,7 +15,6 @@ void Message::RequestRespond(int QnRtn,QextSerialPort *com,QTcpSocket *tcp)
     str+="Flag=4;";
     str+="CP=&&QN="+QN+';';
     str+="QnRtn="+QString::number(QnRtn)+"&&";
-
     QByteArray ch;
     ch.resize(4);
     int len=str.size();
@@ -28,13 +27,12 @@ void Message::RequestRespond(int QnRtn,QextSerialPort *com,QTcpSocket *tcp)
     ch[3] = (len%10)+'0';
     str.insert(0,"##");
     str.insert(2,ch);
-
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
         tcp->flush();
-
+    }
 }
 
 
@@ -59,11 +57,12 @@ void Message::NoticeRespond(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -87,11 +86,12 @@ void Message::DataRespond(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -117,11 +117,12 @@ void Message::ExecuteRespond(int ExeRtn,QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 }
 
 //发送现场时间
@@ -148,11 +149,12 @@ void Message::SendCurrentTime(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -179,11 +181,12 @@ void Message::SendAlarmTarget(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -212,11 +215,12 @@ void Message::SendReportTime(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -243,11 +247,12 @@ void Message::SendRtdInterval(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 
 }
@@ -281,11 +286,12 @@ void Message::SendStatus(QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
-        com->write(str.toAscii());
-    if(tcp!=NULL)
+    if(com!=NULL){
+        com->write(str.toAscii());}
+    else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -326,11 +332,12 @@ void Message::SendRtdData_Slave(QextSerialPort *com,QTcpSocket *tcp)
     ch[3] = (len%10)+'0';
     str.insert(0,"##");
     str.insert(2,ch);
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -427,12 +434,13 @@ void Message::SendCountData_Slave(int CN_Type,QextSerialPort *com,QTcpSocket *tc
 
         if(str.size()>84)
         {
-            if(com!=NULL)
+            if(com!=NULL){
                 com->write(str.toAscii());
-            if(tcp!=NULL)
+            }
+            else if(tcp!=NULL){
                 tcp->write(str.toAscii());
-            tcp->flush();
-
+                tcp->flush();
+            }
         }
     }
 }
@@ -485,11 +493,13 @@ void Message::SendRunTimeData(QextSerialPort *com,QTcpSocket *tcp)
         str.insert(0,"##");
         str.insert(2,ch);
 
-        if(com!=NULL)
+        if(com!=NULL){
             com->write(str.toAscii());
-        if(tcp!=NULL)
+        }
+        else if(tcp!=NULL){
             tcp->write(str.toAscii());
-        tcp->flush();
+            tcp->flush();
+        }
 
     }
 }
@@ -560,11 +570,13 @@ void Message::SendAlarmValue(QString s,QextSerialPort *com,QTcpSocket *tcp)
     str.insert(0,"##");
     str.insert(2,ch);
 
-    if(com!=NULL)
+    if(com!=NULL){
         com->write(str.toAscii());
-    if(tcp!=NULL)
+    }
+    else if(tcp!=NULL){
         tcp->write(str.toAscii());
-    tcp->flush();
+        tcp->flush();
+    }
 
 }
 
@@ -695,7 +707,6 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     QString data;
     QByteArray ch;
     ch.resize(4);
-
     int len=str.length();
     if(len<=12)return -1;
 
@@ -708,7 +719,6 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     if(Ex.indexIn(str) != -1){
         CN=Ex.cap(1).toInt();
     }
-
     myAPI api;
     QString From;
     if(com==NULL){
@@ -720,7 +730,6 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     api.InsertList(data);
     api.Insert_Message_Received(QN,CN,From,str);
     api.Update_Respond(QN,From);   //更新处理标志
-
     int crc=myHelper::CRC16_GB212(&str.toLatin1().data()[6],len-12);
     sprintf(ch.data(),"%.4X",crc);
     if(str.right(6).left(4)!=QString(ch))return -1;
@@ -732,7 +741,6 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     else{
         return -1;
     }
-
     switch (CN)
     {
 
@@ -1387,6 +1395,7 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
             query1.exec(sql);
             query1.clear();
             }
+            
             Ex.setPattern(Code+str_DownLimit);
             if(Ex.indexIn(str) != -1){
                 sql=QString("update ParaInfo set AlarmLow=%1 where Code='%2'").arg(Ex.cap(1)).arg(Code);

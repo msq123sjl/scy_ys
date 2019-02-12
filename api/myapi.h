@@ -61,10 +61,12 @@ private:
     void Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_min,double alarm_max);
     void Protocol_8(int port,int Dec,QString Name,QString Code,QString Unit);
     void Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
-    void Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
     void Protocol_11(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
-    void Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
     void Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_14_Rtu(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int path);
+    void Protocol_21(int port,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3,int equipment);
 
     bool Get_Sampler_Status();
     bool Get_Bottle_Status();

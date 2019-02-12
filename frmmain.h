@@ -33,6 +33,7 @@ private:
     QLabel *labIP;    //当前ip
     QTimer *timerDate;  //计算在线时长和显示当前时间定时器对象
     QTimer *timerSample; //定时读取WEB对采样器的指令
+    //QTimer *timerSampleMake; //定时做样
     QTimer *tcpSocketTimer1;
     QTimer *tcpSocketTimer2;
     QTimer *tcpSocketTimer3;

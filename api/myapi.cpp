@@ -1549,7 +1549,10 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
 
     }
 //远程&本地操控做样
-    if(myApp::Cod_Flag){
+    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==true){
+        return;
+    }
+    if(myApp::COD_Flag){
         sendbuf[0]=Address;  //发送做样命令
         sendbuf[1]=0x06;
         sendbuf[2]=0x00;
@@ -1563,7 +1566,7 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
         myCom[port]->write(sendbuf);
         sleep(1);
         readbuf=myCom[port]->readAll();
-        if(0x33==readbuf[3]) myApp::Cod_Flag=0;
+        if(0x33==readbuf[3]) myApp::COD_Flag=0;
     }
 }
 
@@ -1586,7 +1589,7 @@ void myAPI::Protocol_5(int port)
     qDebug()<<sendbuf;
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<readbuf;
+    qDebug()<<QString("##FC=5:")<<readbuf;
     if(readbuf.data()!=NULL){
         QRegExp Ex;
         QString cardtype;
@@ -1629,7 +1632,7 @@ void myAPI::Protocol_5(int port)
     qDebug()<<sendbuf;
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<readbuf;
+    qDebug()<<QString("##FC=4:")<<readbuf;
     if(readbuf.data()!=NULL){
         QRegExp Ex;
 
@@ -1648,8 +1651,10 @@ void myAPI::Protocol_5(int port)
         sendbuf="##FC=6;Gate=ON;CRC=8581\r\n";
         myCom[port]->write(sendbuf);
         myCom[port]->flush();
+        qDebug()<<sendbuf;
         sleep(2);
         readbuf=myCom[port]->readAll();
+        qDebug()<<QString("##FC=6:")<<readbuf;
         if(readbuf.contains("FC=6;ExeRtn=1;")){
             //执行成功；
             myApp::Door_FLG=0;
@@ -1682,12 +1687,15 @@ void myAPI::Protocol_5(int port)
         sendms.append(ch+"\r\n");
         myCom[port]->write(sendms.toLatin1());
         myCom[port]->flush();
+        qDebug()<<sendms.toLatin1();
         sleep(2);
         readbuf=myCom[port]->readAll();
+        qDebug()<<QString("##FC=1:")<<readbuf;
         if(readbuf.contains("FC=1;ExeRtn=1;")){
             //执行成功；
             myApp::Addcard_FLG=0;
             sql = QString("update CardNumber set [SendCount]='1'where [CardNo]='%1'").arg(CardNo);
+            //qDebug()<<QString("update CardNumber set [SendCount]='1'where [CardNo]='%1'").arg(CardNo);
             query1.exec(sql);//更新处理标记
         }
         else{
@@ -1903,8 +1911,10 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
 
    do{
     myCom[port]->write(sendbuf);
+    //qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
+    //qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     if(readbuf.length()>=9){
         if(Address==readbuf[0])
         {
@@ -1928,14 +1938,14 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
 }
 
 //天泽COD
-void myAPI::Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
+void myAPI::Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3)
 {
     double rtd=0;
     QString flag="D";
     QByteArray readbuf;
     QByteArray sendbuf;
     int check=0;
-   volatile char s[4];
+    volatile char s[4];
 //状态读取
     sendbuf.resize(8);
     sendbuf[0]=Address;
@@ -1960,7 +1970,13 @@ void myAPI::Protocol_10(int port,int Address,int Dec,QString Name,QString Code,Q
                 check = myHelper::CRC16_Modbus(readbuf.data(),readbuf.length()-2);
                 if((readbuf[readbuf.length()-2]==(char)(check&0xff))&&(readbuf[readbuf.length()-1]==(char)(check>>8)))
                 {
-                    if(0==readbuf[4]&&0==readbuf[3]) myApp::COD_Isok=true;
+                    if(0==readbuf[4]&&0==readbuf[3]){
+                        if(0 == COD_or_NH3){
+                            myApp::COD_Isok=true;
+                        }else{
+                            myApp::NH3_Isok=true;
+                        }
+                    }
                 }
         }
     }
@@ -1997,29 +2013,49 @@ void myAPI::Protocol_10(int port,int Address,int Dec,QString Name,QString Code,Q
         }
     }
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
-//添加COD状态检测 空闲状态         myApp::COD_Isok=true;
-    if(myApp::Cod_Flag&&myApp::COD_Isok==true){
-        myApp::Cod_Flag=0;
-        myApp::COD_Isok=false;
-        //添加COD取样指令
-        sendbuf.resize(11);
-        sendbuf[0]=Address;
-        sendbuf[1]=0x10;
-        sendbuf[2]=0x06;
-        sendbuf[3]=0x72;
-        sendbuf[4]=0x00;
-        sendbuf[5]=0x01;
-        sendbuf[6]=0x02;
-        sendbuf[7]=0x00;
-        sendbuf[8]=0x01;
-        check = myHelper::CRC16_Modbus(sendbuf.data(),9);
-        sendbuf[9]=(char)(check);
-        sendbuf[10]=(char)(check>>8);
-        myCom[port]->readAll();
-        qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
-        myCom[port]->write(sendbuf);
-        myCom[port]->flush();
+    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+        return;
     }
+    //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;
+    
+    if(0 == COD_or_NH3){
+        qDebug()<<QString("COD Flag[%1] Isok[%2]").arg(myApp::COD_Flag).arg(myApp::COD_Isok);
+        if(0 == myApp::COD_Flag || myApp::COD_Isok==false){
+            return;
+        }
+        myApp::COD_Flag=0;
+        myApp::COD_Isok=false;
+    }else{
+        qDebug()<<QString("NH3 Flag[%1] Isok[%2]").arg(myApp::NH3_Flag).arg(myApp::NH3_Isok);
+        if(0 == myApp::NH3_Flag || myApp::NH3_Isok==false){
+            return;
+        }
+        myApp::NH3_Flag=0;
+        myApp::NH3_Isok=false;
+
+    }
+    qDebug()<<QString("COD_or_NH3 start");
+    //添加COD/NH3取样指令
+    sendbuf.resize(11);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x10;
+    sendbuf[2]=0x06;
+    sendbuf[3]=0x72;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x01;
+    sendbuf[6]=0x02;
+    sendbuf[7]=0x00;
+    sendbuf[8]=0x01;
+    check = myHelper::CRC16_Modbus(sendbuf.data(),9);
+    sendbuf[9]=(char)(check);
+    sendbuf[10]=(char)(check>>8);
+    myCom[port]->readAll();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    myCom[port]->flush();
+    sleep(2);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
 
 }
 
@@ -2129,7 +2165,7 @@ void myAPI::Protocol_11(int port,int Address,int Dec,QString Name,QString Code,Q
 }
 
 //哈希COD
-void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
+void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit, int COD_or_NH3)
 {
     float rtd=0;
     double total=0;
@@ -2139,6 +2175,41 @@ void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,Q
     int check=0;
     char s[4];
 
+    //状态读取
+    sendbuf.resize(8);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x03;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x34;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x01;
+    check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+    sendbuf[6]=(char)(check);
+    sendbuf[7]=(char)(check>>8);
+    myCom[port]->readAll();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    myCom[port]->flush();
+    sleep(2);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    if(readbuf.length()>=7){
+        if(Address==readbuf[0])
+        {
+                check = myHelper::CRC16_Modbus(readbuf.data(),readbuf.length()-2);
+                if((readbuf[readbuf.length()-2]==(char)(check&0xff))&&(readbuf[readbuf.length()-1]==(char)(check>>8)))
+                {
+                    if(0x01==(readbuf[3] & 0x01)){
+                        if(0 == COD_or_NH3){
+                            myApp::COD_Isok=true;
+                        }else{
+                            myApp::NH3_Isok=true;
+                        }
+                    }
+                }
+        }
+    }
+    //读瞬时值
     sendbuf.resize(8);
     sendbuf[0]=Address;
     sendbuf[1]=0x03;
@@ -2171,6 +2242,38 @@ void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,Q
             }
         }
     }
+     if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==true){
+        return;
+    }
+    //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;
+    if(0 == COD_or_NH3){
+        if(0 == myApp::COD_Flag || myApp::COD_Isok==false){
+            return;
+        }
+        myApp::COD_Flag=0;
+        myApp::COD_Isok=false;
+    }else{
+        if(0 == myApp::NH3_Flag || myApp::NH3_Isok==false){
+            return;
+        }
+        myApp::NH3_Flag=0;
+        myApp::NH3_Isok=false;
+    }
+    //添加COD/NH3取样指令
+    sendbuf.resize(8);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x06;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x33;   
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x01;
+    check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+    sendbuf[6]=(char)(check);
+    sendbuf[7]=(char)(check>>8);
+    myCom[port]->readAll();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    myCom[port]->flush();
 }
 
 
@@ -2218,6 +2321,160 @@ void myAPI::Protocol_13(int port,int Address,int Dec,QString Name,QString Code,Q
                 }
         }
     }
+}
+//TOC-4200
+void myAPI::Protocol_14_Rtu(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int path)
+{
+    double rtd=0;
+    QString flag="D";
+    QByteArray readbuf;
+    QByteArray sendbuf;
+    int head_flag = 0;
+    int check=0;
+    unsigned short int Register = 0;
+    int iLoop,len;
+    volatile char s[4];
+//状态读取
+    Register = path * 20; 
+    sendbuf.resize(8);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x04;
+    sendbuf[2]=(char)(Register>>8);
+    sendbuf[3]=(char)(Register & 0xff);
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x0d;
+    //01040000000D31CF
+    check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+    sendbuf[6]=(char)(check);
+    sendbuf[7]=(char)(check>>8);
+    myCom[port]->readAll();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    myCom[port]->flush();
+    sleep(2);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    len = readbuf.length();
+    if(len>=31){
+        for(iLoop = 0; iLoop <= len - 31; iLoop++){
+            if(Address==readbuf[iLoop] && 0x04==readbuf[iLoop+1] && 26==readbuf[iLoop+2])
+            {
+                head_flag = 1;
+                check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,29);
+                //CRC校验
+                if((readbuf[iLoop+29]==(char)(check&0xff))&&(readbuf[iLoop+30]==(char)(check>>8)))
+                { 
+                    //测量结果判断
+                    if(0==readbuf[iLoop+3]&&1==readbuf[iLoop+4]){
+                        //TOC状态判断
+                        if(0==readbuf[iLoop+5]&&0==readbuf[iLoop+6]) myApp::TOC_Isok=true;
+
+                        s[0]=readbuf[iLoop+22];
+                        s[1]=readbuf[iLoop+21];
+                        s[2]=readbuf[iLoop+20];
+                        s[3]=readbuf[iLoop+19];
+                        rtd=*(float *)s;
+                        flag='N';
+                        qDebug()<<QString("Protocol_14_Rtu RTD[%1]").arg(rtd);
+                    }else{
+                        qDebug()<<QString("Protocol_14_Rtu no data");
+                    }
+                }else{
+                    qDebug()<<QString("COM%1 received check err").arg(port+2);
+                }
+                break;
+            }
+        }
+        if(0 == head_flag){
+            qDebug()<<QString("COM%1 received head not found").arg(port+2);
+        }
+    }
+    CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
+//添加TOC状态检测 空闲状态         myApp::TOC_Isok=true;
+    qDebug()<<QString("TOC In_level[%1]").arg(myApp::In_level);
+    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+        return;
+    }
+    qDebug()<<QString("TOC TOC_Flag[%1] TOC_Isok[%2]").arg(myApp::TOC_Flag).arg(myApp::TOC_Isok);
+    if(myApp::TOC_Flag&&myApp::TOC_Isok==true){
+        qDebug()<<QString("TOC start");
+        myApp::TOC_Flag=0;
+        myApp::TOC_Isok=false;
+        //添加COD取样指令
+        sendbuf.resize(13);
+        sendbuf[0]=Address;
+        sendbuf[1]=0x10;        
+        sendbuf[2]=0x00;
+        sendbuf[3]=0x00;      
+        sendbuf[4]=0x00;
+        sendbuf[5]=0x02;       
+        sendbuf[6]=0x04;
+        sendbuf[7]=0x00;
+        sendbuf[8]=0x01;
+        sendbuf[9]=0x00;
+        sendbuf[10]=(char)(path + 1);
+        
+        check = myHelper::CRC16_Modbus(sendbuf.data(),11);
+        sendbuf[11]=(char)(check);
+        sendbuf[12]=(char)(check>>8);
+        myCom[port]->readAll();
+        qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+        myCom[port]->write(sendbuf);
+        myCom[port]->flush();
+        sleep(2);
+        readbuf=myCom[port]->readAll();
+        qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    }
+
+}
+
+//中绿   equipment: COD(1) NH3(2) 总磷(3)
+void myAPI::Protocol_21(int port,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3,int equipment)
+{
+    double rtd=0;
+    QString flag="D";
+    QString sendbuf;
+    QString readbuf;
+    int    pindex;
+    sendbuf="%0" +QString("%1").arg(equipment) + "#RDD0152101525**\r\n";
+    myCom[port]->readAll();
+    myCom[port]->write(sendbuf.toLatin1());
+    myCom[port]->flush();
+    qDebug()<<sendbuf;
+    sleep(2);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<readbuf;
+    //%01$RDXXXX0803271521260000040718回车换行
+    if(readbuf.length()>=34){
+        pindex = readbuf.indexOf("$RD0000");
+        if(pindex > -1 && readbuf.length() >= pindex + 34){
+            rtd = (readbuf.mid(19+pindex,6) + "." + readbuf.mid(25+pindex,2)).toDouble();
+        }
+    }
+    CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
+    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==true){
+        return;
+    }
+    //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;
+    if(0 == COD_or_NH3){
+        if(0 == myApp::COD_Flag){
+            return;
+        }
+        myApp::COD_Flag=0;
+        //myApp::COD_Isok=false;
+    }else{
+        if(0 == myApp::NH3_Flag){
+            return;
+        }
+        myApp::NH3_Flag=0;
+        //myApp::NH3_Isok=false;
+    }
+    //添加COD/NH3做样指令
+    sendbuf="%0" +QString("%1").arg(equipment) + "#WCSR06801**\r\n";
+    myCom[port]->readAll();
+    qDebug()<<sendbuf;
+    myCom[port]->write(sendbuf.toLatin1());
+    myCom[port]->flush();
 }
 
 double myAPI::HexToDouble(const unsigned char* bytes)
@@ -2279,7 +2536,7 @@ void myAPI::MessageFromCom(int port)
         Decimals=query.value(15).toInt();
         alarm_max=query.value(9).toDouble();
         alarm_min=query.value(10).toDouble();
-
+        //qDebug()<<QString("protocol[%1] Name[%2]").arg(query.value(5).toInt()).arg(Name);
         switch (query.value(5).toInt())//通讯协议
         {
         case 1://明渠流量计
@@ -2307,19 +2564,45 @@ void myAPI::MessageFromCom(int port)
             Protocol_9(port,Address,Decimals,Name,Code,Unit);
         break;
         case 9://天泽COD
-            Protocol_10(port,Address,Decimals,Name,Code,Unit);
+            Protocol_10(port,Address,Decimals,Name,Code,Unit,0);
         break;
         case 10://承德流量计
             Protocol_11(port,Address,Decimals,Name,Code,Unit);
             break;
         case 11://哈希COD
-            Protocol_12(port,Address,Decimals,Name,Code,Unit);
+            Protocol_12(port,Address,Decimals,Name,Code,Unit,0);
             break;
         case 12://哈希NH3
-            Protocol_13(port,Address,Decimals,Name,Code,Unit);
+            Protocol_12(port,Address,Decimals,Name,Code,Unit,1);
+            break;
+        case 13://岛津TOC4200-1
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,0);
+            break;
+        case 14://岛津TOC4200-2
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,1);
+            break;
+        case 15://岛津TOC4200-3
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,2);
+            break;
+        case 16://岛津TOC4200-4
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,3);
+            break;
+        case 17://岛津TOC4200-5
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,4);
+            break;
+        case 18://岛津TOC4200-6
+            Protocol_14_Rtu(port,Address,Decimals,Name,Code,Unit,5);
+            break;
+        case 19://天泽氨氮
+            Protocol_10(port,Address,Decimals,Name,Code,Unit,1);
+            break;
+        case 20://中绿COD
+            Protocol_21(port,Decimals,Name,Code,Unit,0,1);
+            break;
+        case 21://中绿氨氮
+            Protocol_21(port,Decimals,Name,Code,Unit,1,2);
             break;
         default: break;
-
         }
         usleep(COM[port].Interval*1000);
     }
