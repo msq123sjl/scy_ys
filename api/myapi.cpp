@@ -336,7 +336,7 @@ void myAPI::MinsDataProc_WaterPara(QString startTime,QString endTime)
         max_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MAX");
         min_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MIN");
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
-        sql="select [Total] from [Mins_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
+        sql="select [Cou] from [Mins_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
         query1.exec(sql);
         if(query1.next()){
             total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
@@ -483,7 +483,7 @@ void myAPI::HourDataProc_WaterPara(QString startTime,QString endTime)
         max_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MAX");
         min_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MIN");
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
-        sql="select [Total] from [Hour_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
+        sql="select [Cou] from [Hour_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
         query1.exec(sql);
         total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
         cou_value=total*avg_value*0.001;
