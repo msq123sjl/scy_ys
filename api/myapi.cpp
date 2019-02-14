@@ -234,8 +234,7 @@ void myAPI::MinsDataProc_WaterFlow(QString startTime,QString endTime)
     QString sql;
     QString temp;
     double total1=0,total2=0;
-
-    query.exec("select * from ParaInfo where [Code]='B01'");
+    query.exec("select * from ParaInfo where [Code]='w00000'");
     while(query.next())
     {
         code=query.value(1).toString();
@@ -292,7 +291,6 @@ void myAPI::MinsDataProc_WaterFlow(QString startTime,QString endTime)
         }else{
             sql+="--')";
         }
-
         query1.exec(sql);//插入分钟数据表
 
     }
@@ -309,8 +307,8 @@ void myAPI::MinsDataProc_WaterPara(QString startTime,QString endTime)
     QString sql;
     QString temp;
     double total=0;
-
-    query.exec("select * from ParaInfo where [Code]<>'B01'");
+    //query.exec("select * from ParaInfo where [Code]<>'B01'");
+    query.exec("select * from ParaInfo where [Code] like 'w_____' and [Code]<>'w00000'");
 //    query.exec("select * from ParaInfo where [Code]='B01'");
 
     while(query.next())
@@ -333,7 +331,7 @@ void myAPI::MinsDataProc_WaterPara(QString startTime,QString endTime)
         max_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MAX");
         min_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MIN");
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
-        sql="select [Total] from [Mins_B01] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
+        sql="select [Total] from [Mins_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
         query1.exec(sql);
         query1.next();
         total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
@@ -366,7 +364,6 @@ void myAPI::MinsDataProc_WaterPara(QString startTime,QString endTime)
         }else{
             sql+="--')";
         }
-
         query1.exec(sql);//插入分钟数据表
 
     }
@@ -384,7 +381,7 @@ void myAPI::HourDataProc_WaterFlow(QString startTime,QString endTime)
     QString temp;
     double total1=0,total2=0;
 
-    query.exec("select * from ParaInfo where [Code]='B01'");
+    query.exec("select * from ParaInfo where [Code]='w00000'");
     while(query.next())
     {
         code=query.value(1).toString();
@@ -457,7 +454,7 @@ void myAPI::HourDataProc_WaterPara(QString startTime,QString endTime)
     QString temp;
     double total=0;
 
-    query.exec("select * from ParaInfo where [Code]<>'B01'");
+    query.exec("select * from ParaInfo where [Code] like 'w_____' and [Code]<>'w00000'");
     while(query.next())
     {
         code=query.value(1).toString();
@@ -479,7 +476,7 @@ void myAPI::HourDataProc_WaterPara(QString startTime,QString endTime)
         max_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MAX");
         min_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","MIN");
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
-        sql="select [Total] from [Hour_B01] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
+        sql="select [Total] from [Hour_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
         query1.exec(sql);
         total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
         cou_value=total*avg_value*0.001;
@@ -525,7 +522,7 @@ void myAPI::DayDataProc(QString startTime,QString endTime)
     QString sql;
     QString temp;
 
-    query.exec("select * from ParaInfo");
+    query.exec("select * from ParaInfo where [Code] like 'w_____'");
     while(query.next())
     {
         code=query.value(1).toString();
@@ -1812,8 +1809,10 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
     do{
     myCom[port]->write(sendbuf);
     myCom[port]->flush();
+    qDebug()<<QString("COM%1 send[%2]:").arg(port+2).arg(timecount)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     if(readbuf.length()>=9){
         if(Address==readbuf[0])
         {
