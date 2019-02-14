@@ -84,15 +84,17 @@ double myAPI::GetCountDataFromSql(QString tableName,QString StartTime,QString En
 {
     QSqlQuery query;
     QString sql;
+    double d_value= 0;
 
     sql="select "+func+"(cast("+field+ " as double)) from "+'['+tableName+']';
     sql+=" where [GetTime]>='"+StartTime+"'"+" and [GetTime]<='"+EndTime+"'";
     sql+=" and [Flag]='N'";
 
     query.exec(sql);
-    query.next();
-    QByteArray str=query.value(0).toByteArray();
-    double d_value=myHelper::Str_To_Double(str.data());
+    if(query.next()){
+        QByteArray str=query.value(0).toByteArray();
+        d_value=myHelper::Str_To_Double(str.data());
+    }
     return d_value;
 }
 
@@ -101,13 +103,15 @@ double myAPI::GetCountDataFromSql1(QString tableName,QString StartTime,QString E
 {
     QSqlQuery query;
     QString sql;
+    double d_value=0;
 
     sql="select "+func+"(cast("+field+ " as double)) from "+'['+tableName+']';
     sql+=" where [GetTime]>='"+StartTime+"'"+" and [GetTime]<='"+EndTime+"'";
     query.exec(sql);
-    query.next();
-    QByteArray str=query.value(0).toByteArray();
-    double d_value=myHelper::Str_To_Double(str.data());
+    if(query.next()){
+        QByteArray str=query.value(0).toByteArray();
+        d_value=myHelper::Str_To_Double(str.data());
+    }
     return d_value;
 }
 
@@ -258,10 +262,11 @@ void myAPI::MinsDataProc_WaterFlow(QString startTime,QString endTime)
 
         sql="select [Total] from "+temp+" where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'  order by [GetTime] asc";
         query1.exec(sql);
-        query1.first();
-        total1=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
-        query1.last();
-        total2=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        if(query1.first()){
+            total1=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+            query1.last();
+            total2=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        }
         cou_value=total2-total1;
 
         sql = "insert into Mins_"+code;
@@ -333,8 +338,9 @@ void myAPI::MinsDataProc_WaterPara(QString startTime,QString endTime)
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
         sql="select [Total] from [Mins_w00000] where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'";
         query1.exec(sql);
-        query1.next();
-        total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        if(query1.next()){
+            total=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        }
         cou_value=total*avg_value*0.001;
 
         sql = "insert into Mins_"+code;
@@ -405,10 +411,11 @@ void myAPI::HourDataProc_WaterFlow(QString startTime,QString endTime)
         avg_value=GetCountDataFromSql(temp,startTime,endTime,"Rtd","AVG");
         sql="select [Total] from "+temp+" where [GetTime]>='"+startTime+"' and [GetTime]<='"+endTime+"'  order by [GetTime] asc";
         query1.exec(sql);
-        query1.first();
-        total1=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
-        query1.last();
-        total2=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        if(query1.first()){
+            total1=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+            query1.last();
+            total2=myHelper::Str_To_Double(query1.value(0).toByteArray().data());
+        }
         cou_value=total2-total1;
 
         sql = "insert into Hour_"+code;

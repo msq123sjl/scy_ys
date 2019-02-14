@@ -548,10 +548,11 @@ void Message::SendAlarmValue(QString s,QextSerialPort *com,QTcpSocket *tcp)
         sql="select [AlarmUp],[AlarmLow] from [ParaInfo]";
         sql+=" where [Code]='"+Ex.cap(1)+"'";
         query.exec(sql);
-        query.next();
-        str+=";";
-        str+=Ex.cap(1)+"-UpValue="+query.value(0).toString()+',';
-        str+=Ex.cap(1)+"-LowValue="+query.value(1).toString();
+        if(query.next()){
+            str+=";";
+            str+=Ex.cap(1)+"-UpValue="+query.value(0).toString()+',';
+            str+=Ex.cap(1)+"-LowValue="+query.value(1).toString();
+        }
 
         pos+=Ex.matchedLength();
     }
@@ -655,26 +656,27 @@ int Message::messageThresholdValue(QString s)
 
         sql="select count(*) from [Threshold] where [Code]='"+Code+"' and [DateType]='"+DateType+"'";
         query.exec(sql);
-        query.next();
-        if(query.value(0).toInt()==0){
-            sql=QString("insert into [Threshold]([Code],[Value],[DateType],[BeginTime],[EndTime],[SiteType])values('%1','%2','%3','%4','%5','%6')" )
-                    .arg(Code)
-                    .arg(Value)
-                    .arg(DateType)
-                    .arg(BeginTime)
-                    .arg(EndTime)
-                    .arg(SiteType);
-        }else{
-            sql="update [Threshold] set";
-            sql+=" [Value]='"+Value+"',";
-            sql+="[DateType]='"+DateType+"',";
-            sql+="[BeginTime]='"+BeginTime+"',";
-            sql+="[EndTime]='"+EndTime+"',";
-            sql+="[SiteType]='"+SiteType+"',";
-            sql+=" where [Code]='"+Code+"'";
-            sql+=" and [DateType]='"+DateType+"'";
+        if(query.next()){
+            if(query.value(0).toInt()==0){
+                sql=QString("insert into [Threshold]([Code],[Value],[DateType],[BeginTime],[EndTime],[SiteType])values('%1','%2','%3','%4','%5','%6')" )
+                        .arg(Code)
+                        .arg(Value)
+                        .arg(DateType)
+                        .arg(BeginTime)
+                        .arg(EndTime)
+                        .arg(SiteType);
+            }else{
+                sql="update [Threshold] set";
+                sql+=" [Value]='"+Value+"',";
+                sql+="[DateType]='"+DateType+"',";
+                sql+="[BeginTime]='"+BeginTime+"',";
+                sql+="[EndTime]='"+EndTime+"',";
+                sql+="[SiteType]='"+SiteType+"',";
+                sql+=" where [Code]='"+Code+"'";
+                sql+=" and [DateType]='"+DateType+"'";
+            }
+            query.exec(sql);
         }
-        query.exec(sql);
     }
     return pos;
 
