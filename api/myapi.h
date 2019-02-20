@@ -55,6 +55,8 @@ private:
     double HexToDouble(const unsigned char* bytes);
     void Protocol_2(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
     void Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    int  Protocol_4_read(int port,int Address,double *rtd);
+    void Protocol_4_control(int port,int Address);
     void Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max);
     void Protocol_5(int port);
     void Protocol_6(int port);

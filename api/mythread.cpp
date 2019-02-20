@@ -88,12 +88,13 @@ void Control_Execute::run() //处理控制线程
     bool result;
     stopped=false;
     myAPI *api=new myAPI;
+    myApp Cod_Pro;
     //超标次数清零
     while(!stopped)
     {
         if(myApp::Pro_Rain==1)        //初次降雨
         {
-            myApp::cod_overproof=0;
+            Cod_Pro.CodOverproofChange(0);
             myApp *rain_pro=new myApp;
             frmValve *catchment=new frmValve;
             result=catchment->Catchment_Valve_Open_Set();

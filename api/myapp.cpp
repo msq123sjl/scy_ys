@@ -89,6 +89,7 @@ volatile int myApp::TOC_Isok=false;
 volatile int myApp::NH3_Flag=0;
 volatile int myApp::NH3_Isok=false;
 
+QString myApp::CODSampleTime="00010101000000";
 
 int myApp::Sample_Free=0;
 int myApp::Valve_cmd_status=0;
@@ -275,10 +276,18 @@ void myApp::PronumberChange(int number)
     mutex_rain.unlock();
 }
 
-void myApp::CodOverproofChange(int number)
+void myApp::CodOverproofPlus(int number)
 {
     mutex_codflag.lock();
     myApp::cod_overproof+=number;
+    mutex_codflag.unlock();
+
+}
+
+void myApp::CodOverproofChange(int number)
+{
+    mutex_codflag.lock();
+    myApp::cod_overproof=number;
     mutex_codflag.unlock();
 
 }

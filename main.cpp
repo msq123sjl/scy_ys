@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
         myApp::AppPath=QApplication::applicationDirPath()+"/";
         myApp::DeskWidth=qApp->desktop()->availableGeometry().width();
         myApp::DeskHeigth=qApp->desktop()->availableGeometry().height();
-
         //判断当前数据库文件是否存在(如果数据库打开失败则终止应用程序)
            if (!myHelper::FileIsExist("/mnt/sdcard/ys_scy.db")){
 
@@ -44,6 +43,11 @@ int main(int argc, char *argv[])
         //创建数据库连接并打开(如果数据库打开失败则终止应用程序)
         if (!DbConn.open()){
             myHelper::ShowMessageBoxError("打开数据库失败,程序将自动关闭！");
+            return 1;
+        }
+        if (myHelper::FileIsExist("/mnt/sdcard/ys_scy.db-journal")){
+            system("rm -rf /mnt/sdcard/ys_scy.db-journal");
+            system("reboot -n");
             return 1;
         }
         QSqlDatabase memorydb;

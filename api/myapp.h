@@ -115,6 +115,7 @@ public:
     static volatile bool Addcard_FLG;//=1需要开卡
     static volatile bool Deletecard_FLG;//=1需要销卡
 
+    static QString CODSampleTime;
 
     static QString LocalIP;                  //设备IP
     static QString Mask;                //设备子网掩码
@@ -156,6 +157,7 @@ public:
     static void ReadLocalNet();
     static void WriteLocalNet();
     void PronumberChange(int number);
+    void CodOverproofPlus(int number);
     void CodOverproofChange(int number);
     static void AnalogPortInit();  //模拟通道数据初始化
     static QStringList AnalogParaToStringList();

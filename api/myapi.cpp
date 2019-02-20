@@ -901,6 +901,9 @@ void myAPI::Insert_Message_Rtd(int flag,QString dt)
     {
         content+=";"+query.value(2).toString()+"-Rtd="+query.value(3).toString().split(" ")[0];
         content+=","+query.value(2).toString()+"-Flag="+query.value(5).toString();
+        if(query.value(2).toString() == "w01018"){
+            content+=","+query.value(2).toString()+"-DataTime="+myApp::CODSampleTime;
+        }
     }
     content+="&&";
 
@@ -1431,7 +1434,106 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
 }
 
 //微兰COD
-void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max)
+int myAPI::Protocol_4_read(int port,int Address,double *rtd){
+    QByteArray readbuf;
+    QByteArray sendbuf;
+    int head_flag = 0;
+    int check=0;
+    int iLoop,len;
+    volatile char s[4];
+    //状态读取
+    sendbuf.resize(8);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x03;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x02;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x13;
+    //01040000000D31CF
+    check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+    sendbuf[6]=(char)(check>>8);
+    sendbuf[7]=(char)(check);
+
+    myCom[port]->readAll();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    myCom[port]->flush();
+    sleep(2);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    len = readbuf.length();
+    if(len>=43){
+        for(iLoop = 0; iLoop <= len - 43; iLoop++){
+            if(Address==readbuf[iLoop] && 0x03==readbuf[iLoop+1] && 38==readbuf[iLoop+2])
+            {
+                head_flag = 1;
+                check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,41);
+                //CRC校验
+                if((readbuf[iLoop+42]==(char)(check&0xff))&&(readbuf[iLoop+41]==(char)(check>>8)))
+                { 
+                    //测量结果判断
+                    if(0==readbuf[iLoop+3]&&1==readbuf[iLoop+4]){
+                        //TOC状态判断
+                        if(0==readbuf[iLoop+39]&&0==readbuf[iLoop+40]) myApp::COD_Isok=true;
+
+                        s[0]=readbuf[iLoop+8];
+                        s[1]=readbuf[iLoop+7];
+                        s[2]=readbuf[iLoop+6];
+                        s[3]=readbuf[iLoop+5];
+                        *rtd=*(float *)s;
+                        QDate data(readbuf[iLoop+14],readbuf[iLoop+16],readbuf[iLoop+18]);
+                        QTime time(readbuf[iLoop+20],readbuf[iLoop+22],readbuf[iLoop+24]);
+                        myApp::CODSampleTime = data.toString("yyyyMMdd") + time.toString("hhmmss");
+                        /*myApp::CODSampleTime.sprintf("%4d%2d%2d%2d%2d%2d",readbuf[iLoop+14],readbuf[iLoop+16],\
+                                                                          readbuf[iLoop+18],readbuf[iLoop+20],\
+                                                                          readbuf[iLoop+22],readbuf[iLoop+24]);*/
+                        qDebug()<<QString("Protocol_4 RTD[%1] CODSampleTime[%2]").arg(*rtd).arg(myApp::CODSampleTime);
+                        /*myApp::CODSampleTime = QString("%1-%2-%3 %4:%5:%6").arg(readbuf[iLoop+14]).arg(readbuf[iLoop+16])\
+                                                                  .arg(readbuf[iLoop+18]).arg(readbuf[iLoop+20])\
+                                                                  .arg(readbuf[iLoop+22]).arg(readbuf[iLoop+24]);*/
+                        return 1;
+                    }else{
+                        qDebug()<<QString("Protocol_4 no data");
+                    }
+                }else{
+                    qDebug()<<QString("COM%1 received check err").arg(port+2);
+                }
+                break;
+            }
+        }
+        if(0 == head_flag){
+            qDebug()<<QString("COM%1 received head not found").arg(port+2);
+        }
+    }
+    return 0;
+
+}
+void myAPI::Protocol_4_control(int port,int Address){
+    QByteArray readbuf;
+    QByteArray sendbuf;
+
+    sendbuf.resize(11);
+    sendbuf[0]=Address;  //发送做样命令
+    sendbuf[1]=0x10;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x73;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x01;
+    sendbuf[6]=0x02;
+    sendbuf[7]=0x00;
+    sendbuf[8]=0x01;
+    
+    sendbuf[9]=0x93;
+    sendbuf[10]=0x6c;
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    sleep(1);
+    readbuf=myCom[port]->readAll();
+
+}
+
+
+/*void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max)
 {
     double rtd=0;
     QString flag="D";
@@ -1452,13 +1554,15 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
     sendbuf[6]=(char)(check);
     sendbuf[7]=(char)(check>>8);
     myCom[port]->write(sendbuf);
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
-    if(readbuf.length()>=9){
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    if(readbuf.length()>=17){
         if(Address==readbuf[0])
         {
-            check = myHelper::CRC16_Modbus(readbuf.data(),7);
-            if((readbuf[7]==(char)(check&0xff))&&(readbuf[8]==(char)(check>>8)))
+            check = myHelper::CRC16_Modbus(readbuf.data(),15);
+            if((readbuf[15]==(char)(check&0xff))&&(readbuf[16]==(char)(check>>8)))
             {
                 s[0]=readbuf[4];
                 s[1]=readbuf[3];
@@ -1466,6 +1570,7 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
                 s[3]=readbuf[5];
                 rtd=*(float *)s;        //瞬时COD
                 flag='N';
+                qDebug()<<QString("COM%1 received:").arg(port+2);
                 CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
             }
         }
@@ -1572,6 +1677,87 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
         readbuf=myCom[port]->readAll();
         if(0x33==readbuf[3]) myApp::COD_Flag=0;
     }
+}*/
+//微兰COD
+void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max)
+{
+    double rtd=0;
+    QString flag="D";
+    int interval=0;
+    int cod_over_count=0;
+    
+    int iLoop;
+//状态读取
+    if(1 == Protocol_4_read(port, Address, &rtd)){
+        flag='N';
+    }else{
+        flag='D';
+    }
+    CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
+
+
+    qDebug()<<QString("COD In_level[%1]").arg(myApp::In_level);
+    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+        return;
+    }
+    myApp Cod_Pro;
+    if(myApp::Pro_Rain>=2&&myApp::Pro_Rain<6)   //
+    {
+        //发送做样命令
+        Protocol_4_control(port,Address);
+        myApp::COD_Isok = false;
+        sleep(30);
+        flag='D';
+        for(iLoop=0;iLoop<5;iLoop++){
+            if(1 == Protocol_4_read(port, Address, &rtd)){
+                flag='N';
+                if(rtd>alarm_max)   //超标
+                {
+                    interval=1;
+                    cod_over_count=1;
+                }
+                //TODO //连续降雨合格开排水阀
+                else                //合格
+                {
+                        Cod_Pro.CodOverproofChange(0);
+                        myApp *rain_pro=new myApp;
+                        rain_pro->PronumberChange(3);   //恢复合格
+                        delete rain_pro;
+                        interval=myApp::CODinterval*60;
+                }
+                break;
+            }
+            sleep(2);
+        }
+        CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);   
+        sleep(interval);
+    }else{  //非降雨周期
+        Cod_Pro.CodOverproofChange(0);
+    }
+
+    Cod_Pro.CodOverproofPlus(cod_over_count);
+
+    if(myApp::cod_overproof>=3)   //超标累计大于3次
+    {
+        Cod_Pro.CodOverproofChange(3);
+        QString str_tmp;
+        str_tmp=QString("PolID=w01018,Value=%1").arg(rtd);
+        emit ProtocolOver(2,2,1,1,str_tmp);   //发送留样关阀信号
+        myApp *rain_pro=new myApp;
+        rain_pro->PronumberChange(7);   //等待降雨
+        delete rain_pro;
+
+    }
+    //添加COD状态检测 空闲状态         myApp::COD_Isok=true;
+    qDebug()<<QString("COD COD_Flag[%1] COD_Isok[%2]").arg(myApp::COD_Flag).arg(myApp::COD_Isok);
+    if(myApp::COD_Flag&&myApp::COD_Isok==true){
+        qDebug()<<QString("COD start");
+        myApp::COD_Flag=0;
+        myApp::COD_Isok=false;
+        //添加COD取样指令
+        Protocol_4_control(port,Address);
+    }
+
 }
 
 
