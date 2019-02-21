@@ -1473,7 +1473,7 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
                 { 
                     //测量结果判断
                     if(0==readbuf[iLoop+3]&&1==readbuf[iLoop+4]){
-                        //TOC状态判断
+                        //COD状态判断
                         if(0==readbuf[iLoop+39]&&0==readbuf[iLoop+40]) myApp::COD_Isok=true;
 
                         s[0]=readbuf[iLoop+8];
@@ -1708,7 +1708,7 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
         myApp::COD_Isok = false;
         sleep(30);
         flag='D';
-        for(iLoop=0;iLoop<5;iLoop++){
+        for(iLoop=0;iLoop<30;iLoop++){
             if(1 == Protocol_4_read(port, Address, &rtd)){
                 flag='N';
                 if(rtd>alarm_max)   //超标
