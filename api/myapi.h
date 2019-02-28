@@ -6,6 +6,10 @@
 #include "api/message.h"
 #include <QList>
 
+//#define _DEBUG
+#define _TEST
+
+
 class myAPI : public QObject
 {
     Q_OBJECT

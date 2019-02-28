@@ -1320,6 +1320,13 @@ void myAPI::Protocol_1()
 //明渠流量计
 void myAPI::Protocol_2(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
 {
+#ifdef _DEBUG
+        double rtd=0;
+        static double total=0;
+        rtd = 10.0;    
+        total += 0.01;
+        CacheDataProc(rtd,total,"N",Dec,Name,Code,Unit);
+#else
     double rtd=0;
     double total=0;
     QString flag="D";
@@ -1363,11 +1370,22 @@ void myAPI::Protocol_2(int port,int Address,int Dec,QString Name,QString Code,QS
     }
 
     CacheDataProc(rtd,total,flag,Dec,Name,Code,Unit);
-
+#endif
 }
 //C10电导率
 void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
 {
+#ifdef _DEBUG
+    double rtd=0;
+    rtd = 10.0;    
+    CacheDataProc(rtd,0,"N",Dec,Name,Code,Unit);
+#else
+    #ifdef _TEST
+    static int SendCNT = 0;
+    static int SendSuccessCNT = 0;
+    static int SendZeroCNT = 0;
+    static int SendNegativeCNT = 0;
+    #endif
     double rtd=0;
     QString flag="D";
     QByteArray readbuf;
@@ -1401,8 +1419,12 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
     sendbuf[13]=0x0D;
     readbuf=myCom[port]->readAll();
     myCom[port]->write(sendbuf);
+    #ifdef _TEST
+        SendCNT++;
+    #endif
     sleep(3);
     readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     sleep(1);
     if(readbuf.length()>=24&&0x40==readbuf[0]){
         if(Address==(readbuf[1]-0x30)*16+readbuf[2]-0x30)
@@ -1424,17 +1446,31 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
             s[2]=myHelper::HexStrValue(readbuf[7],readbuf[8]);
             s[3]=myHelper::HexStrValue(readbuf[5],readbuf[6]);
             rtd=*(float *)s;        //瞬时电导率
-
+            #ifdef _TEST
+            if(rtd ==0){
+                SendZeroCNT++;
+            }else if(rtd < 0){
+                SendNegativeCNT++;
+            }
+            SendSuccessCNT++;
+            #endif
             flag='N';
             CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
         }
     }
+    #ifdef _TEST
+    qDebug()<<QString("COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
+    #endif
     sleep(2);
-
+#endif
 }
 
 //微兰COD
 int myAPI::Protocol_4_read(int port,int Address,double *rtd){
+#ifdef _DEBUG
+    *rtd = 10.0;    
+    return 1;
+#else
     QByteArray readbuf;
     QByteArray sendbuf;
     int head_flag = 0;
@@ -1442,6 +1478,7 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
     int iLoop,len;
     volatile char s[4];
     //状态读取
+    //01 03 00 03 00 02 0B 34
     sendbuf.resize(8);
     sendbuf[0]=Address;
     sendbuf[1]=0x03;
@@ -1449,6 +1486,11 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
     sendbuf[3]=0x02;
     sendbuf[4]=0x00;
     sendbuf[5]=0x13;
+    /*sendbuf[1]=0x03;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x03;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x02;*/
     //01040000000D31CF
     check = myHelper::CRC16_Modbus(sendbuf.data(),6);
     sendbuf[6]=(char)(check>>8);
@@ -1481,7 +1523,7 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
                         s[2]=readbuf[iLoop+6];
                         s[3]=readbuf[iLoop+5];
                         *rtd=*(float *)s;
-                        QDate data(readbuf[iLoop+14],readbuf[iLoop+16],readbuf[iLoop+18]);
+                        QDate data(readbuf[iLoop+14]+2000,readbuf[iLoop+16],readbuf[iLoop+18]);
                         QTime time(readbuf[iLoop+20],readbuf[iLoop+22],readbuf[iLoop+24]);
                         myApp::CODSampleTime = data.toString("yyyyMMdd") + time.toString("hhmmss");
                         /*myApp::CODSampleTime.sprintf("%4d%2d%2d%2d%2d%2d",readbuf[iLoop+14],readbuf[iLoop+16],\
@@ -1506,7 +1548,7 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
         }
     }
     return 0;
-
+#endif
 }
 void myAPI::Protocol_4_control(int port,int Address){
     QByteArray readbuf;
@@ -1982,6 +2024,12 @@ void myAPI::Protocol_6(int port)
 //南控液位计
 void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_min,double alarm_max)
 {
+    #ifdef _TEST
+        static int SendCNT = 0;
+        static int SendSuccessCNT = 0;
+        static int SendZeroCNT = 0;
+        static int SendNegativeCNT = 0;
+    #endif
     double rtd=0;
     QString flag="D";
     QByteArray readbuf;
@@ -2001,8 +2049,11 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
     sendbuf[7]=(char)(check>>8);
     do{
     myCom[port]->write(sendbuf);
+    #ifdef _TEST
+        SendCNT++;
+    #endif
     myCom[port]->flush();
-    qDebug()<<QString("COM%1 send[%2]:").arg(port+2).arg(timecount)<<sendbuf.toHex().toUpper();
+    //qDebug()<<QString("COM%1 send[%2]:").arg(port+2).arg(timecount)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
     qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
@@ -2017,6 +2068,14 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
                     s[2]=readbuf[4];
                     s[3]=readbuf[3];
                     rtd=*(float *)s;
+                    #ifdef _TEST
+                        if(rtd ==0){
+                            SendZeroCNT++;
+                        }else if(rtd < 0){
+                            SendNegativeCNT++;
+                        }
+                        SendSuccessCNT++;
+                    #endif
                     flag='N';
                     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
                     if(rtd>alarm_min)
@@ -2038,7 +2097,9 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
     }
     timecount++;
     }while(timecount<5&&flag=="D");
-
+    #ifdef _TEST
+    qDebug()<<QString("COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
+    #endif
     if(flag=="D")myApp::LVStatus="Error";
 
 }
@@ -2046,6 +2107,13 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
 //CE9628JM流量计
 void myAPI::Protocol_8(int port,int Dec,QString Name,QString Code,QString Unit)
 {
+#ifdef _DEBUG
+    double rtd=0;
+    static double total=0;
+    rtd = 10.0;    
+    total += 0.01;
+    CacheDataProc(rtd,total,"N",Dec,Name,Code,Unit);
+#else
     double rtd=0;
     double total;
     int check=0;
@@ -2078,17 +2146,29 @@ void myAPI::Protocol_8(int port,int Dec,QString Name,QString Code,QString Unit)
             CacheDataProc(rtd,total,flag,Dec,Name,Code,Unit);
         }
     }
+#endif
 }
 
 //PH-P206
 void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
 {
+#ifdef _DEBUG
+        double rtd=0;
+        rtd = 10.0;    
+        CacheDataProc(rtd,0,"N",Dec,Name,Code,Unit);
+#else
+    #ifdef _TEST
+            static int SendCNT = 0;
+            static int SendSuccessCNT = 0;
+            static int SendZeroCNT = 0;
+            static int SendNegativeCNT = 0;
+    #endif
     double rtd=0;
     QString flag="D";
     QByteArray readbuf;
     QByteArray sendbuf;
     int check=0;
-   volatile char s[4];
+    volatile char s[4];
     int timecount=0;
     sendbuf.resize(8);
     sendbuf[0]=Address;
@@ -2103,10 +2183,14 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
 
    do{
     myCom[port]->write(sendbuf);
+    myCom[port]->flush();
+    #ifdef _TEST
+        SendCNT++;
+    #endif
     //qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
-    //qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     if(readbuf.length()>=9){
         if(Address==readbuf[0])
         {
@@ -2118,6 +2202,14 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
                     s[2]=readbuf[6];
                     s[3]=readbuf[5];
                     rtd=*(float *)s;        //瞬时PH
+                    #ifdef _TEST
+                        if(rtd ==0){
+                            SendZeroCNT++;
+                        }else if(rtd < 0){
+                            SendNegativeCNT++;
+                        }
+                        SendSuccessCNT++;
+                    #endif
                     flag='N';
                     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
                 }
@@ -2125,8 +2217,10 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
     }
     timecount++;
     }while (timecount<5&&flag=="D") ;
-
-
+    #ifdef _TEST
+        qDebug()<<QString("COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
+    #endif
+#endif
 }
 
 //天泽COD
@@ -2366,7 +2460,7 @@ void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,Q
     QByteArray sendbuf;
     int check=0;
     char s[4];
-
+    
     //状态读取
     sendbuf.resize(8);
     sendbuf[0]=Address;

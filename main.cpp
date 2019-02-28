@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
         QFont font("SIMSUN",9,QFont::Normal);           //设置字体
         a.setFont(font);
-
+        system("echo start[`date`] >> /mnt/nandflash/start.log");
         QTextCodec *codec = QTextCodec::codecForName("UTF-8");      //中文字体编码方式
         QTextCodec::setCodecForLocale(codec);
         QTextCodec::setCodecForCStrings(codec);
@@ -45,8 +45,26 @@ int main(int argc, char *argv[])
             myHelper::ShowMessageBoxError("打开数据库失败,程序将自动关闭！");
             return 1;
         }
+        QSqlQuery query;
+        QString sql;
+
+        sql="select count(*) from sqlite_master where type='table' ";
+        query.exec(sql);
+        if(query.next() && query.value(0).toInt() > 0){
+            qDebug()<<QString("tab count[%1]").arg(query.value(0).toInt());
+        }else{
+            qDebug()<<QString("tab count err, quit!!!");
+            system("rm -rf /mnt/sdcard/ys_scy.db-journal");
+            system("rm -rf /mnt/sdcard/ys_scy.db");
+            system("cp -f /mnt/sdcard/bak/ys_scy.db /mnt/sdcard/ys_scy.db");
+            system("echo bak[`date`] >> /mnt/nandflash/start.log");
+            system("reboot -n");
+            return 1;
+        }
+
         if (myHelper::FileIsExist("/mnt/sdcard/ys_scy.db-journal")){
             system("rm -rf /mnt/sdcard/ys_scy.db-journal");
+            system("echo rm journal[`date`] >> /mnt/nandflash/start.log");
             system("reboot -n");
             return 1;
         }
