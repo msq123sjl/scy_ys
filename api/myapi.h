@@ -9,6 +9,11 @@
 //#define _DEBUG
 #define _TEST
 
+#define YH_PH_DATALEN   12
+#define YH_FLOW_DATALEN   8
+#define SZ_PH_AND_EC_DATALEN   20
+
+
 
 class myAPI : public QObject
 {
@@ -73,6 +78,11 @@ private:
     void Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
     void Protocol_14_Rtu(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int path);
     void Protocol_21(int port,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3,int equipment);
+    void Protocol_23(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen,int Reg);
+    void Protocol_25(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
+    void Protocol_26(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
+    void Protocol_27(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
+    void Protocol_28(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
 
     bool Get_Sampler_Status();
     bool Get_Bottle_Status();

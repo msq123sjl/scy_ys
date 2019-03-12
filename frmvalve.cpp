@@ -49,6 +49,7 @@ void frmValve::Delay_MSec(unsigned int msec)//非阻塞延时
 //排水阀门开启输出使能
 bool frmValve::Valve_Open_Set()
 {
+    qDebug()<<QString("Valve Open start");
     Valve_Close_Clear();
     Set_Flag=true;
     SwitchOut_On(myApp::Out_drain_open);
@@ -63,6 +64,7 @@ bool frmValve::Valve_Open_Set()
         {
             Valve_Open_Clear();
             Valve_Close_Clear();
+            qDebug()<<QString("Valve Open fail");
             return false;
         }
     }
@@ -72,6 +74,7 @@ bool frmValve::Valve_Open_Set()
     if(Valve_RightStatus==IsClose){
         Valve_Close_Clear();
     }
+    qDebug()<<QString("Valve Open success");
     return true;
 }
 
@@ -81,6 +84,7 @@ bool frmValve::Valve_Open_Set()
 //排水阀门关闭输出使能
 bool frmValve::Valve_Close_Set()
 {
+    qDebug()<<QString("Valve Close start");
     Valve_Open_Clear();
     Set_Flag=true;
     SwitchOut_On(myApp::Out_drain_close);
@@ -94,6 +98,7 @@ bool frmValve::Valve_Close_Set()
         {
             Valve_Open_Clear();
             Valve_Close_Clear();
+            qDebug()<<QString("Valve Close fail");
             return false;
         }
     }
@@ -103,6 +108,7 @@ bool frmValve::Valve_Close_Set()
     if(Valve_RightStatus==IsClose){
         Valve_Close_Clear();
     }
+    qDebug()<<QString("Valve Close success");
     return true;
 }
 
@@ -112,6 +118,7 @@ bool frmValve::Valve_Close_Set()
 //集水阀门开启输出使能
 bool frmValve::Catchment_Valve_Open_Set()
 {
+    qDebug()<<QString("Catchment Valve Open start");
     int   Catch_Set_Count=0;
     Catchment_Valve_Close_Clear();
     Catchment_Set_Flag=true;
@@ -126,6 +133,7 @@ bool frmValve::Catchment_Valve_Open_Set()
         {
             Catchment_Valve_Close_Clear();
             Catchment_Valve_Open_Clear();
+            qDebug()<<QString("Catchment Valve Open fail");
             return false;
         }
     }
@@ -135,6 +143,7 @@ bool frmValve::Catchment_Valve_Open_Set()
     if(Catchment_RightStatus==IsClose){
         Catchment_Valve_Close_Clear();
     }
+    qDebug()<<QString("Catchment Valve Open success");
     return true;
 
 }
@@ -143,7 +152,7 @@ bool frmValve::Catchment_Valve_Open_Set()
 //集水阀门关闭输出使能
 bool frmValve::Catchment_Valve_Close_Set()
 {
-
+    qDebug()<<QString("Catchment Valve close start");
     Catchment_Valve_Open_Clear();
     Catchment_Set_Flag=true;
     SwitchOut_On(myApp::Out_catchment_close);
@@ -158,6 +167,7 @@ bool frmValve::Catchment_Valve_Close_Set()
         {
             Catchment_Valve_Close_Clear();
             Catchment_Valve_Open_Clear();
+            qDebug()<<QString("Catchment Valve close fail");
             return false;
         }
     }
@@ -167,6 +177,7 @@ bool frmValve::Catchment_Valve_Close_Set()
     if(Catchment_RightStatus==IsClose){
         Catchment_Valve_Close_Clear();
     }
+    qDebug()<<QString("Catchment Valve close success");
     return true;
 }
 
