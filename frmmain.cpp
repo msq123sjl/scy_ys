@@ -89,6 +89,7 @@ frmMain::frmMain(QWidget *parent) :
     Msend.start();
     db_clear.start();
     read_ad.start();
+    rain.start();
     qDebug()<<QString("com2 id = %1").arg(u1.isRunning());
     qDebug()<<QString("com3 id = %1").arg(u2.isRunning());
     qDebug()<<QString("com4 id = %1").arg(u3.isRunning());
@@ -106,6 +107,7 @@ frmMain::~frmMain()
     Msend.quit();
     db_clear.quit();
     read_ad.quit();
+    rain.quit();
     delete ui;
 }
 
@@ -141,9 +143,9 @@ void frmMain::InitForm()
     labUser->setAttribute(Qt::WA_DeleteOnClose);
     ui->statusbar->addWidget(labTime);
     ui->statusbar->setStyleSheet(QString("QStatusBar::item{border:0px}"));//去掉label的边框.
-    connect(&protocol,SIGNAL(ProtocolOver(int,int,int,int,QString)),this,SLOT(OverFlag(int,int,int,int,QString)));
+    connect(&rain,SIGNAL(conrainsignal(int,int,int,int,QString)),this,SLOT(OverFlag(int,int,int,int,QString)));
     connect(&message_api,SIGNAL(consignal(int,int,int,int,QString)),this,SLOT(OverFlag(int,int,int,int,QString)));
-    connect(&message_api,SIGNAL(rain_start()),this,SLOT(get_rain_signal()));
+    //connect(&message_api,SIGNAL(rain_start()),this,SLOT(get_rain_signal()));
     connect(&message_api,SIGNAL(Sampling()),this,SLOT(Sample_Flag_Changed()));
     connect(&message_api,SIGNAL(Cod_Run()),this,SLOT(Cod_Flag_Changed()));
     timerDate=new QTimer(this);
@@ -182,7 +184,7 @@ void frmMain::InitForm()
     connect(ui->action_Calibration,SIGNAL(triggered()),this,SLOT(ShowForm()));
 }
 
-void frmMain::get_rain_signal()
+/*void frmMain::get_rain_signal()
 {
     qDebug()<<"get rain signal";
     if(rain.isRunning())
@@ -195,8 +197,9 @@ void frmMain::get_rain_signal()
     else{
         rain.start();
     }
+    connect(&protocol,SIGNAL(ProtocolOver(int,int,int,int,QString)),this,SLOT(OverFlag(int,int,int,int,QString)));
     connect(&rain,SIGNAL(conrainsignal(int,int,int,int,QString)),this,SLOT(OverFlag(int,int,int,int,QString)));
-}
+}*/
 
 void frmMain::Sample_Flag_Changed()
 {
@@ -492,7 +495,7 @@ bool frmMain::CheckSampleCmd()
     QString strList;
     QTextStream stream(&etho_status);
     strList=stream.readAll();
-    qDebug()<<strList;
+    //qDebug()<<strList;
     etho_status.close();
     if(strList.startsWith("0"))
     {

@@ -1169,34 +1169,35 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
                 RequestRespond(REQUEST_READY,com,tcp);
             }
         }
-        frmValve *valve =new frmValve;
-        if(valve->Valve_Close_Set()){
-            if(valve->Catchment_Valve_Close_Set()!=true)
-            {
-                ExecuteRespond(RESULT_FAILED,com,tcp);
-                delete valve;
-                return -1;
-            }
-        }
-        else{
-            ExecuteRespond(RESULT_FAILED,com,tcp);
-            delete valve;
+        if( myApp::Pro_Rain > 0){
+            RequestRespond(REQUEST_REFUSED,com,tcp);
             return -1;
         }
         Ex.setPattern("IsOpenCatchmentValve=([0-1])");
         if(Ex.indexIn(str) != -1){
+            frmValve *valve =new frmValve;
             if(Ex.cap(1).toInt()==1){//Flag=1
+                if(valve->Valve_Close_Set()!=true){  //首次降雨关排水阀
+                    ExecuteRespond(RESULT_FAILED,com,tcp);
+                    delete valve;
+                    return -1;
+                }
                 myApp *rain_pro=new myApp;
                 rain_pro->PronumberChange(1);   //初次降雨
                 delete rain_pro;
-            }
-            else
-            {
+            }else{
+                /*if(valve->Catchment_Valve_Close_Set()!=true) //连续降雨关集水阀
+                {
+                    ExecuteRespond(RESULT_FAILED,com,tcp);
+                    delete valve;
+                    return -1;
+                }*/
                 myApp *rain_pro=new myApp;
                 rain_pro->PronumberChange(2);  //连续降雨
                 delete rain_pro;
             }
-            emit rain_start();
+            delete valve;
+            //emit rain_start();
             ExecuteRespond(RESULT_SUCCESS,com,tcp);
         }
         else{
@@ -1213,6 +1214,10 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
             if(Ex.cap(1).toInt()&0x01){//Flag=1
                 RequestRespond(REQUEST_READY,com,tcp);
             }
+        }
+        if( 0 == myApp::Pro_Rain || myApp::Pro_Rain > 5){
+            RequestRespond(REQUEST_REFUSED,com,tcp);
+            return -1;
         }
         myApp *rain_pro=new myApp;
         rain_pro->PronumberChange(6);   //降雨结束

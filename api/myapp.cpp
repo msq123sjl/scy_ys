@@ -5,6 +5,9 @@
 #include <QMutex>
 QMutex mutex_rain;
 QMutex mutex_codflag;
+QMutex mutex_phflag;
+QMutex mutex_ecflag;
+
 QString myApp::Catchment_QN;
 QString myApp::Drain_QN;
 bool myApp::manual_control=false;
@@ -22,6 +25,12 @@ bool myApp::Login=false;
 //程序运行过程中需要的全局变量
 int myApp::Pro_Rain=0;
 int myApp::cod_overproof=0;
+int myApp::ph_overproof=0;
+int myApp::ec_overproof=0;
+
+double myApp::COD_Rtd = 0;
+double myApp::PH_Rtd = 0;
+double myApp::EC_Rtd = 0;
 
 QString myApp::AppPath="";
 int myApp::DeskWidth=800;
@@ -292,6 +301,49 @@ void myApp::CodOverproofChange(int number)
 
 }
 
+void myApp::PhOverproofPlus(int number)
+{
+    mutex_phflag.lock();
+    if(myApp::ph_overproof < 1 && number < 0){
+        number = 0;
+        myApp::ph_overproof = 0;
+    }else{
+        myApp::ph_overproof+=number;
+    }
+    mutex_phflag.unlock();
+
+}
+
+void myApp::PhOverproofChange(int number)
+{
+    mutex_phflag.lock();
+    myApp::ph_overproof=number;
+    mutex_phflag.unlock();
+
+}
+
+void myApp::EcOverproofPlus(int number)
+{
+    mutex_ecflag.lock();
+    if(myApp::ec_overproof < 1 && number < 0){
+        number = 0;
+        myApp::ec_overproof = 0;
+    }else{
+        myApp::ec_overproof+=number;
+    }
+    mutex_ecflag.unlock();
+
+}
+
+void myApp::EcOverproofChange(int number)
+{
+    mutex_ecflag.lock();
+    myApp::ec_overproof=number;
+    mutex_ecflag.unlock();
+
+}
+
+
 void myApp::WriteDefaultConfig()
 {
     QString fileName=myApp::AppPath+"config_scy.txt";
@@ -423,6 +475,7 @@ void myApp::ReadIoConfig()
     myApp::In_reflux_close=set->value("In_reflux_close").toInt();
     myApp::In_power=set->value("In_power").toInt();
     myApp::In_level=set->value("In_level").toInt();
+    if(0 == myApp::In_level){myApp::In_level = 24;}
     set->endGroup();
     delete set;
 }

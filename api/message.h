@@ -95,7 +95,7 @@ public:
     bool  messageSetTime(int year,int month,int day,int hour,int min,int sec);
     int    messageThresholdValue(QString s);
 signals:
-    void rain_start();
+    //void rain_start();
     void Cod_Run();
     void Sampling();
     void consignal(int contyp,int drainsta,int catchmentsta,int issample,QString str_tmp);

@@ -7,13 +7,14 @@
 #include <QList>
 
 //#define _DEBUG
-#define _TEST
+//#define _TEST
 
 #define YH_PH_DATALEN   12
 #define YH_FLOW_DATALEN   8
 #define SZ_PH_AND_EC_DATALEN   20
 
-
+#define COD_OVER_CNT 3
+#define OTHER_OVER_CNT 10
 
 class myAPI : public QObject
 {
@@ -63,7 +64,7 @@ public:
 private:  
     double HexToDouble(const unsigned char* bytes);
     void Protocol_2(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
-    void Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max);
     int  Protocol_4_read(int port,int Address,double *rtd);
     void Protocol_4_control(int port,int Address);
     void Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max);
@@ -71,7 +72,7 @@ private:
     void Protocol_6(int port);
     void Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_min,double alarm_max);
     void Protocol_8(int port,int Dec,QString Name,QString Code,QString Unit);
-    void Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max);
     void Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
     void Protocol_11(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
     void Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
@@ -89,11 +90,6 @@ private:
     bool Sample_current_all();
     bool Sample_reset();
     bool sample_record();
-
-
-
-signals:
-    void ProtocolOver(int contyp,int drainsta,int catchmentsta,int issample,QString str_tmp);
 
 };
 

@@ -80,7 +80,7 @@ void Uart6_Execute::run()
 }
 void Control_Execute::rain_control()
 {
-    stopped=false;
+    //stopped=false;
 }
 
 void Control_Execute::run() //处理控制线程
@@ -88,32 +88,67 @@ void Control_Execute::run() //处理控制线程
     bool result;
     stopped=false;
     myAPI *api=new myAPI;
-    myApp Cod_Pro;
+    myApp *rain_pro=new myApp;
+    myApp Pro;
+    QString str_tmp;
+    qDebug()<<QString("rain start...");
     //超标次数清零
     while(!stopped)
     {
         if(myApp::Pro_Rain==1)        //初次降雨
         {
-            Cod_Pro.CodOverproofChange(0);
-            myApp *rain_pro=new myApp;
+            Pro.CodOverproofChange(COD_OVER_CNT - 1);
+            Pro.PhOverproofChange(OTHER_OVER_CNT/2);
+            Pro.EcOverproofChange(OTHER_OVER_CNT/2);
             frmValve *catchment=new frmValve;
             result=catchment->Catchment_Valve_Open_Set();
             api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,100,result,1,";");
             sleep(myApp::catchmenttime*60);                       //时间界面上设定
-            result=catchment->Catchment_Valve_Close_Set();
-            api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,0,result,1,";");
+            //result=catchment->Catchment_Valve_Close_Set();
+            //api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,0,result,1,";");
             delete catchment;
             rain_pro->PronumberChange(2);   //发生做样标识
-            delete rain_pro;
             sleep(330); //等待做样完成
         }
 
+        if(myApp::Pro_Rain>=2 && myApp::Pro_Rain<6){
+                    
+            if(5 != myApp::Pro_Rain){
+                if(myApp::cod_overproof >= COD_OVER_CNT)   //COD超标连续大于3次
+                {
+                    Pro.CodOverproofChange(COD_OVER_CNT);
+                    str_tmp=QString("PolID=w01018,Value=%1").arg(myApp::COD_Rtd);
+                    qDebug()<<QString("CodOverproof:")<<str_tmp;
+                    emit conrainsignal(2,2,1,1,str_tmp);   //发送留样关阀信号
+                    rain_pro->PronumberChange(5);   //不合格
+                }else if(myApp::ph_overproof>=OTHER_OVER_CNT){//PH超标连续大于10次
 
+                    Pro.PhOverproofChange(OTHER_OVER_CNT/2);
+                    str_tmp=QString("PolID=w01001,Value=%1").arg(myApp::PH_Rtd);
+                    qDebug()<<QString("PhOverproof:")<<str_tmp;
+                    emit conrainsignal(2,2,1,1,str_tmp);   //发送留样关阀信号
+                    rain_pro->PronumberChange(5);   //不合格
+                }else if(myApp::ec_overproof>=OTHER_OVER_CNT){//EC超标连续大于10次
+
+                    Pro.EcOverproofChange(OTHER_OVER_CNT/2);
+                    str_tmp=QString("PolID=w01014,Value=%1").arg(myApp::EC_Rtd);
+                    qDebug()<<QString("EcOverproof:")<<str_tmp;
+                    emit conrainsignal(2,2,1,1,str_tmp);   //发送留样关阀信号
+                    rain_pro->PronumberChange(5);   //不合格
+                }
+            }else {
+                if( 0 == myApp::cod_overproof && 0 == myApp::ph_overproof && 0 == myApp::ec_overproof){
+                    rain_pro->PronumberChange(3);   //恢复合格
+                }
+            }
+        }
+                
         if(myApp::Pro_Rain==7){  //运维状态或者远程控制时候终止降雨
-            myApp *rain_pro=new myApp;
             rain_pro->PronumberChange(0);   //等待降雨
-            delete rain_pro;
-            stopped=true;
+            Pro.CodOverproofChange(COD_OVER_CNT - 1);
+            Pro.PhOverproofChange(OTHER_OVER_CNT/2);
+            Pro.EcOverproofChange(OTHER_OVER_CNT/2);
+            //stopped=true;
 
         }
 
@@ -122,34 +157,33 @@ void Control_Execute::run() //处理控制线程
             if(Valve_CurrentStatus!=IsOpen)
             {
                 emit conrainsignal(2,1,2,2,"null");
-                myApp *rain_pro=new myApp;
                 rain_pro->PronumberChange(2);
-                delete rain_pro;
             }
         }
 
         if(myApp::Pro_Rain==6)  //收到停雨指令
         {
             frmValve *valve =new frmValve;
-            myAPI *api =new myAPI;
             result=valve->Valve_Close_Set();
             api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),2,0,result,1,";");
             valve->Catchment_Valve_Close_Set();
             api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,0,result,1,";");
             delete valve;
             //添加阀门记录
-            myApp *rain_pro=new myApp;
             rain_pro->PronumberChange(0);   //等待降雨
-            delete rain_pro;
-            stopped=true;
+            Pro.CodOverproofChange(COD_OVER_CNT - 1);
+            Pro.PhOverproofChange(OTHER_OVER_CNT/2);
+            Pro.EcOverproofChange(OTHER_OVER_CNT/2);
+            //stopped=true;
         }
         sleep(5);
     }
+    delete rain_pro;
     delete api;
 }
 void Control_Execute::stop()
 {
-    stopped=true;
+    //stopped=true;
 
 }
 

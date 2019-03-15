@@ -1373,7 +1373,7 @@ void myAPI::Protocol_2(int port,int Address,int Dec,QString Name,QString Code,QS
 #endif
 }
 //C10电导率
-void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
+void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max)
 {
 #ifdef _DEBUG
     double rtd=0;
@@ -1392,6 +1392,10 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
     QByteArray sendbuf;
     char check=0;
     char ch_temp;
+    int timecount = 0;
+    static int debug_cnt = 0;
+    debug_cnt += 1;
+    debug_cnt %= 10;
     volatile char s[4];
     sendbuf.resize(14);
     sendbuf[0]=0x40;
@@ -1417,46 +1421,63 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
     else ch_temp = (ch_temp - 10 )+  'A';
     sendbuf[12]=ch_temp;
     sendbuf[13]=0x0D;
-    readbuf=myCom[port]->readAll();
-    myCom[port]->write(sendbuf);
-    #ifdef _TEST
-        SendCNT++;
-    #endif
-    sleep(3);
-    readbuf=myCom[port]->readAll();
-    qDebug()<<QString("Lt_EC:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
-    sleep(1);
-    if(readbuf.length()>=24&&0x40==readbuf[0]){
-        if(Address==(readbuf[1]-0x30)*16+readbuf[2]-0x30)
-        {
-            check = myHelper::XORValid(readbuf.mid(1,readbuf.length()-4),readbuf.length()-4);
-            ch_temp = (check  >> 4) & 0x0F;  //取高位数；
-            if (ch_temp < 10)                       //低于10的数
-                ch_temp = ch_temp  +  '0';
-            else
-                ch_temp = (ch_temp - 10 ) +  'A';   //不低于10的16进制数，如：A、B、C、D、E、F
-            if(readbuf[readbuf.length()-3]!=ch_temp) return;
-
-            ch_temp = check & 0x0F;  //取低位数；
-            if (ch_temp < 10) ch_temp = ch_temp  +  '0';
-            else ch_temp = (ch_temp - 10 )+  'A';
-            if(readbuf[readbuf.length()-2]!=ch_temp) return;
-            s[0]=myHelper::HexStrValue(readbuf[11],readbuf[12]);
-            s[1]=myHelper::HexStrValue(readbuf[9],readbuf[10]);
-            s[2]=myHelper::HexStrValue(readbuf[7],readbuf[8]);
-            s[3]=myHelper::HexStrValue(readbuf[5],readbuf[6]);
-            rtd=*(float *)s;        //瞬时电导率
-            #ifdef _TEST
-            if(rtd ==0){
-                SendZeroCNT++;
-            }else if(rtd < 0){
-                SendNegativeCNT++;
-            }
-            SendSuccessCNT++;
-            #endif
-            flag='N';
+    do{
+        readbuf=myCom[port]->readAll();
+        myCom[port]->write(sendbuf);
+        #ifdef _TEST
+            SendCNT++;
+        #endif
+        sleep(3);
+        readbuf=myCom[port]->readAll();
+        if(1 == debug_cnt && timecount > 0){
+            qDebug()<<QString("Lt_EC[%1]:COM%2 received:").arg(timecount).arg(port+2)<<readbuf.toHex().toUpper();
         }
-    }
+        sleep(1);
+        if(readbuf.length()>=24&&0x40==readbuf[0]){
+            if(Address==(readbuf[1]-0x30)*16+readbuf[2]-0x30)
+            {
+                check = myHelper::XORValid(readbuf.mid(1,readbuf.length()-4),readbuf.length()-4);
+                ch_temp = (check  >> 4) & 0x0F;  //取高位数；
+                if (ch_temp < 10)                       //低于10的数
+                    ch_temp = ch_temp  +  '0';
+                else
+                    ch_temp = (ch_temp - 10 ) +  'A';   //不低于10的16进制数，如：A、B、C、D、E、F
+                if(readbuf[readbuf.length()-3]!=ch_temp) { timecount++; continue;}
+
+                ch_temp = check & 0x0F;  //取低位数；
+                if (ch_temp < 10) ch_temp = ch_temp  +  '0';
+                else ch_temp = (ch_temp - 10 )+  'A';
+                if(readbuf[readbuf.length()-2]!=ch_temp) { timecount++; continue;}
+                s[0]=myHelper::HexStrValue(readbuf[11],readbuf[12]);
+                s[1]=myHelper::HexStrValue(readbuf[9],readbuf[10]);
+                s[2]=myHelper::HexStrValue(readbuf[7],readbuf[8]);
+                s[3]=myHelper::HexStrValue(readbuf[5],readbuf[6]);
+                rtd=*(float *)s;        //瞬时电导率
+                flag='N';
+                myApp Ec_Pro;
+                if(myApp::Pro_Rain>=2 && myApp::Pro_Rain<6){               
+                    qDebug()<<QString("ec_rtd[%1] alarm_max[%2]").arg(rtd).arg(alarm_max);
+                    if(rtd>alarm_max){   //超标
+                        Ec_Pro.EcOverproofPlus(1);
+                        myApp::EC_Rtd = rtd;
+                    }else{                //合格
+                        Ec_Pro.EcOverproofPlus(-1);
+                    }    
+                }else{
+                     Ec_Pro.EcOverproofChange(OTHER_OVER_CNT/2);
+                }
+                #ifdef _TEST
+                if(rtd ==0){
+                    SendZeroCNT++;
+                }else if(rtd < 0){
+                    SendNegativeCNT++;
+                }
+                SendSuccessCNT++;
+                #endif
+            }
+        }
+        timecount++;
+    }while (timecount<5 && flag=="D") ;
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
     #ifdef _TEST
     qDebug()<<QString("Lt_EC:COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
@@ -1477,6 +1498,9 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
     int check=0;
     int iLoop,len;
     volatile char s[4];
+    static int debug_cnt = 0;
+    debug_cnt += 1;
+    debug_cnt %= 10;
     //状态读取
     //01 03 00 03 00 02 0B 34
     sendbuf.resize(8);
@@ -1491,12 +1515,14 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
     sendbuf[7]=(char)(check);
 
     myCom[port]->readAll();
-    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    //qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     myCom[port]->write(sendbuf);
     myCom[port]->flush();
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    if(1 == debug_cnt || myApp::Pro_Rain > 1){
+        qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    }
     len = readbuf.length();
     if(len>=43){
         for(iLoop = 0; iLoop <= len - 43; iLoop++){
@@ -1510,7 +1536,7 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
                     //测量结果判断
                     if(0==readbuf[iLoop+3]&&1==readbuf[iLoop+4]){
                         //COD状态判断
-                        if(0==readbuf[iLoop+39]&&0==readbuf[iLoop+40]){
+                        if(0==readbuf[iLoop+39]&& 2 > readbuf[iLoop+40] ){
                             myApp::COD_Isok=true;
                         }else{
                             myApp::COD_Isok=false;
@@ -1527,7 +1553,9 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
                         /*myApp::CODSampleTime.sprintf("%4d%2d%2d%2d%2d%2d",readbuf[iLoop+14],readbuf[iLoop+16],\
                                                                           readbuf[iLoop+18],readbuf[iLoop+20],\
                                                                           readbuf[iLoop+22],readbuf[iLoop+24]);*/
-                        qDebug()<<QString("Protocol_4 RTD[%1] CODSampleTime[%2]").arg(*rtd).arg(myApp::CODSampleTime);
+                        if(1 == debug_cnt){
+                            qDebug()<<QString("Protocol_4 RTD[%1] CODSampleTime[%2]").arg(*rtd).arg(myApp::CODSampleTime);
+                        }
                         /*myApp::CODSampleTime = QString("%1-%2-%3 %4:%5:%6").arg(readbuf[iLoop+14]).arg(readbuf[iLoop+16])\
                                                                   .arg(readbuf[iLoop+18]).arg(readbuf[iLoop+20])\
                                                                   .arg(readbuf[iLoop+22]).arg(readbuf[iLoop+24]);*/
@@ -1724,7 +1752,6 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
     double rtd=0;
     QString flag="D";
     int interval=0;
-    int cod_over_count=0;
     
     int iLoop;
 //状态读取
@@ -1736,7 +1763,7 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
 
 
-    qDebug()<<QString("COD In_level[%1]").arg(myApp::In_level);
+    //qDebug()<<QString("COD In_level[%1]").arg(myApp::In_level);
     if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
         return;
     }
@@ -1750,22 +1777,21 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
             sleep(30);
             flag='D';
             for(iLoop=0;iLoop<60;iLoop++){
+                qDebug()<<QString("COD sample...");
                 if(1 == Protocol_4_read(port, Address, &rtd) && myApp::COD_Isok == true){
                     flag='N';            
                     qDebug()<<QString("COD_rtd[%1] alarm_max[%2] COD_Isok[%3]").arg(rtd).arg(alarm_max).arg(myApp::COD_Isok);
                     if(rtd>alarm_max)   //超标
                     {
-                        interval=1;
-                        cod_over_count=1;
+                        interval=1;                       
+                        Cod_Pro.CodOverproofPlus(1);
+                        myApp::COD_Rtd = rtd;
                     }
                     //TODO //连续降雨合格开排水阀
                     else                //合格
                     {
-                            Cod_Pro.CodOverproofChange(0);
-                            myApp *rain_pro=new myApp;
-                            rain_pro->PronumberChange(3);   //恢复合格
-                            delete rain_pro;
-                            interval=myApp::CODinterval*60;
+                        Cod_Pro.CodOverproofChange(0);
+                        interval=myApp::CODinterval*60;
                     }
                     break;
                 }
@@ -1775,22 +1801,10 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
             sleep(interval);
         }
     }else{  //非降雨周期
-        Cod_Pro.CodOverproofChange(0);
+        Cod_Pro.CodOverproofChange(COD_OVER_CNT - 1);
     }
 
-    Cod_Pro.CodOverproofPlus(cod_over_count);
 
-    if(myApp::cod_overproof>=3)   //超标累计大于3次
-    {
-        Cod_Pro.CodOverproofChange(3);
-        QString str_tmp;
-        str_tmp=QString("PolID=w01018,Value=%1").arg(rtd);
-        emit ProtocolOver(2,2,1,1,str_tmp);   //发送留样关阀信号
-        myApp *rain_pro=new myApp;
-        rain_pro->PronumberChange(7);   //等待降雨
-        delete rain_pro;
-
-    }
     //添加COD状态检测 空闲状态         myApp::COD_Isok=true;
     qDebug()<<QString("COD COD_Flag[%1] COD_Isok[%2]").arg(myApp::COD_Flag).arg(myApp::COD_Isok);
     if(myApp::COD_Flag&&myApp::COD_Isok==true){
@@ -1818,10 +1832,10 @@ void myAPI::Protocol_5(int port)
     sendbuf="##FC=5;CRC=7340\r\n";
     myCom[port]->write(sendbuf);
     myCom[port]->flush();
-    qDebug()<<sendbuf;
+    //qDebug()<<sendbuf;
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<QString("##FC=5:")<<readbuf;
+    //qDebug()<<QString("##FC=5:")<<readbuf;
     if(readbuf.data()!=NULL){
         QRegExp Ex;
         QString cardtype;
@@ -1861,10 +1875,10 @@ void myAPI::Protocol_5(int port)
     sendbuf="##FC=4;CRC=7640\r\n";
     myCom[port]->write(sendbuf);
     myCom[port]->flush();
-    qDebug()<<sendbuf;
+    //qDebug()<<sendbuf;
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<QString("##FC=4:")<<readbuf;
+    //qDebug()<<QString("##FC=4:")<<readbuf;
     if(readbuf.data()!=NULL){
         QRegExp Ex;
 
@@ -1986,31 +2000,31 @@ void myAPI::Protocol_6(int port)
      myCom[port]->readAll();
      myCom[port]->write(sendbuf.toLatin1());
      myCom[port]->flush();
-     qDebug()<<sendbuf;
+     //qDebug()<<sendbuf;
      myHelper::Sleep(2000);
      readbuf=myCom[port]->readAll();
      if(readbuf.length()>=99){
          myApp::BottleId=readbuf.mid(27,2).toInt();
-         qDebug()<<myApp::BottleId;
+         //qDebug()<<myApp::BottleId;
     }
 
     if(myApp::Sample_Flag){
-        qDebug()<<QString("sample_flg=%1").arg(myApp::Sample_Flag);
+        //qDebug()<<QString("sample_flg=%1").arg(myApp::Sample_Flag);
         sendbuf="DR@24HB";
         myCom[0]->readAll();
         myCom[0]->write(sendbuf.toLatin1());
         myCom[0]->flush();
-        qDebug()<<sendbuf;
+        //qDebug()<<sendbuf;
         myHelper::Sleep(1000);
         readbuf=myCom[0]->readAll();
-        qDebug()<<readbuf;
+        //qDebug()<<readbuf;
         if(readbuf=="A1DR@24OKHB"){
             sendbuf="DR@26HB";
             myCom[0]->write(sendbuf.toLatin1());
             myCom[0]->flush();
             myHelper::Sleep(1000);
             readbuf=myCom[0]->readAll();
-            qDebug()<<readbuf;
+            //qDebug()<<readbuf;
             if(readbuf=="A1DR@26OKHB")
             {
                 myApp::Sample_Flag=0;
@@ -2056,7 +2070,7 @@ void myAPI::Protocol_7(int port,int Address,int Dec,QString Name,QString Code,QS
     //qDebug()<<QString("COM%1 send[%2]:").arg(port+2).arg(timecount)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<QString("LV:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    //qDebug()<<QString("LV:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     if(readbuf.length()>=9){
         if(Address==readbuf[0])
         {
@@ -2152,7 +2166,7 @@ void myAPI::Protocol_8(int port,int Dec,QString Name,QString Code,QString Unit)
 }
 
 //PH-P206
-void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
+void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double alarm_max)
 {
 #ifdef _DEBUG
         double rtd=0;
@@ -2172,6 +2186,9 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
     int check=0;
     volatile char s[4];
     int timecount=0;
+    static int debug_cnt = 0;
+    debug_cnt += 1;
+    debug_cnt %= 10;
     sendbuf.resize(8);
     sendbuf[0]=Address;
     sendbuf[1]=0x04;
@@ -2192,29 +2209,43 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
     //qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     sleep(2);
     readbuf=myCom[port]->readAll();
-    qDebug()<<QString("Lt_PH:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    if(1 == debug_cnt){
+        qDebug()<<QString("Lt_PH:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+    }
     if(readbuf.length()>=9){
         if(Address==readbuf[0])
         {
-                check = myHelper::CRC16_Modbus(readbuf.data(),7);
-                if((readbuf[7]==(char)(check&0xff))&&(readbuf[8]==(char)(check>>8)))
-                {
-                    s[0]=readbuf[4];
-                    s[1]=readbuf[3];
-                    s[2]=readbuf[6];
-                    s[3]=readbuf[5];
-                    rtd=*(float *)s;        //瞬时PH
-                    #ifdef _TEST
-                        if(rtd ==0){
-                            SendZeroCNT++;
-                        }else if(rtd < 0){
-                            SendNegativeCNT++;
-                        }
-                        SendSuccessCNT++;
-                    #endif
-                    flag='N';
-                    
+            check = myHelper::CRC16_Modbus(readbuf.data(),7);
+            if((readbuf[7]==(char)(check&0xff))&&(readbuf[8]==(char)(check>>8)))
+            {
+                s[0]=readbuf[4];
+                s[1]=readbuf[3];
+                s[2]=readbuf[6];
+                s[3]=readbuf[5];
+                rtd=*(float *)s;        //瞬时PH
+                myApp Ph_Pro;
+                if(myApp::Pro_Rain>=2 && myApp::Pro_Rain<6){   //                
+                    qDebug()<<QString("ph_rtd[%1] alarm_max[%2]").arg(rtd).arg(alarm_max);
+                    if(rtd>alarm_max){   //超标
+                        Ph_Pro.PhOverproofPlus(1);
+                        myApp::PH_Rtd = rtd;
+                    }else{                //合格
+                        Ph_Pro.PhOverproofPlus(-1);
+                    }    
+                }else{
+                     Ph_Pro.PhOverproofChange(OTHER_OVER_CNT/2);
                 }
+                #ifdef _TEST
+                    if(rtd ==0){
+                        SendZeroCNT++;
+                    }else if(rtd < 0){
+                        SendNegativeCNT++;
+                    }
+                    SendSuccessCNT++;
+                #endif
+                flag='N';
+                
+            }
         }
     }
     timecount++;
@@ -3241,7 +3272,7 @@ void myAPI::MessageFromCom(int port)
             Protocol_2(port,Address,Decimals,Name,Code,Unit);
         break;
         case 2://电导率
-            Protocol_3(port,Address,Decimals,Name,Code,Unit);
+            Protocol_3(port,Address,Decimals,Name,Code,Unit,alarm_max);
         break;
         case 3://微兰COD
             Protocol_4(port,Address,Decimals,Name,Code,Unit,alarm_max);
@@ -3259,7 +3290,7 @@ void myAPI::MessageFromCom(int port)
              Protocol_8(port,Decimals,Name,Code,Unit);
         break;
         case 8://PH-P206
-            Protocol_9(port,Address,Decimals,Name,Code,Unit);
+            Protocol_9(port,Address,Decimals,Name,Code,Unit,alarm_max);
         break;
         case 9://天泽COD
             Protocol_10(port,Address,Decimals,Name,Code,Unit,0);

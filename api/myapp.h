@@ -56,8 +56,11 @@ class myApp : public QObject
 {
     Q_OBJECT
 public:
-   static  int Pro_Rain;
+   static  int Pro_Rain;        // 0：未降雨 1：开始降雨 2：测量中 3：测量合格 5：测量不合格 6 降雨停止 7 退出降雨流程
    static  int cod_overproof;
+   static  int ph_overproof;
+   static  int ec_overproof;
+   
 
    static QString Catchment_QN;
    static QString Drain_QN;
@@ -147,6 +150,10 @@ public:
     static volatile int NH3_Flag;
     static volatile int NH3_Isok;
 
+    static  double  COD_Rtd;
+    static  double  PH_Rtd;
+    static  double  EC_Rtd;
+
     static int Sample_Free;
     static int  Valve_cmd_status;
     static void WriteConfig();          //读取配置文件,在main函数最开始加载程序载入
@@ -159,6 +166,10 @@ public:
     void PronumberChange(int number);
     void CodOverproofPlus(int number);
     void CodOverproofChange(int number);
+    void PhOverproofPlus(int number);
+    void PhOverproofChange(int number);
+    void EcOverproofPlus(int number);
+    void EcOverproofChange(int number);
     static void AnalogPortInit();  //模拟通道数据初始化
     static QStringList AnalogParaToStringList();
 

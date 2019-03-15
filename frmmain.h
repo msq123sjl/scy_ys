@@ -66,7 +66,7 @@ private slots:
     void Status();
     void on_btnClearData_clicked();
     void updateClientStatusDisconnect();
-    void get_rain_signal();
+    //void get_rain_signal();
     void OverFlag(int contyp,int drainsta,int catchmentsta,int issample,QString str_tmp);
     void Sample_Flag_Changed();
     void Cod_Flag_Changed();
