@@ -1001,23 +1001,30 @@ void myAPI::SendData_Status(int flag)
             .arg(dt.mid(17,2));
     if(Catchment_CurrentStatus==IsClose){
         content+="Per1=0;";
-    }
-    else{
+    }else if(Catchment_CurrentStatus==IsOpen){
         content+="Per1=100;";
+    }else{
+        content+="Per1=--;";
     }
+    
     if(Valve_CurrentStatus==IsClose){
         content+="Per2=0;";
-    }
-    else{
+    }else if(Valve_CurrentStatus==IsOpen){
         content+="Per2=100;";
 
+    }else{
+        content+="Per2=--;";
+
     }
+    
     if(reflux_CurrentStatus==IsClose){
         content+="Pump=OFF;";
-    }
-    else{
+    }else if(reflux_CurrentStatus==IsOpen){
         content+="Pump=ON;";
+    }else{
+        content+="Pump=--;";
     }
+    
     content+="Gate="+myApp::DoorStatus+";";
     content+="LV="+myApp::LVStatus+";";
     content+="BotID="+QString::number(myApp::BottleId);
@@ -1429,7 +1436,7 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
         #endif
         sleep(3);
         readbuf=myCom[port]->readAll();
-        if(1 == debug_cnt && timecount > 0){
+        if(1 == debug_cnt || timecount > 0){
             qDebug()<<QString("Lt_EC[%1]:COM%2 received:").arg(timecount).arg(port+2)<<readbuf.toHex().toUpper();
         }
         sleep(1);
@@ -3206,6 +3213,171 @@ void myAPI::Protocol_28(int port,int Address,int Dec,QString Name,QString Code,Q
 #endif
 }
 
+/*仪华电导率GPC68*/
+void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen){
+#ifdef _DEBUG
+    double rtd=0;
+    rtd = 10.0;    
+    CacheDataProc(rtd,0,"N",Dec,Name,Code,Unit);
+#else
+    #ifdef _TEST
+        static int SendCNT = 0;
+        static int SendSuccessCNT = 0;
+        static int SendZeroCNT = 0;
+        static int SendNegativeCNT = 0;
+    #endif
+        double rtd=0;
+        QString flag="D";
+        QByteArray readbuf;
+        QByteArray sendbuf;
+        int head_flag = 0;
+        int check=0;
+        int iLoop,len;
+        //volatile char s[4];
+        int timecount=0;
+        sendbuf.resize(8);
+        sendbuf[0]=Address;
+        sendbuf[1]=0x03;
+        sendbuf[2]=0x00;
+        sendbuf[3]=0x00;
+        sendbuf[4]=0x00;
+        sendbuf[5]=0x07;
+        check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+        sendbuf[6]=(char)(check);
+        sendbuf[7]=(char)(check>>8);
+    
+       do{
+        myCom[port]->write(sendbuf);
+        myCom[port]->flush();
+    #ifdef _TEST
+            SendCNT++;
+    #endif
+        qDebug()<<QString("YH_EC:COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+        sleep(2);
+        readbuf=myCom[port]->readAll();
+        qDebug()<<QString("YH_EC:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+        len = readbuf.length();
+        if(readbuf.length() >= DataLen + 5){
+            for(iLoop = 0; iLoop <= len - DataLen - 5; iLoop++){
+                if(Address==readbuf[iLoop] && 0x03==readbuf[iLoop+1] && DataLen==readbuf[iLoop+2])
+                {
+                    head_flag = 1;
+                    check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,DataLen + 3);
+                    if((readbuf[iLoop + DataLen + 3]==(char)(check&0xff))&&(readbuf[iLoop + DataLen + 4]==(char)(check>>8)))
+                    {
+                        //rtd = (readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])/1000 + ((readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])%1000)/1000.000;
+                    #ifdef _TEST
+                            if(rtd ==0){
+                                SendZeroCNT++;
+                            }else if(rtd < 0){
+                                SendNegativeCNT++;
+                            }
+                            SendSuccessCNT++;
+                    #endif
+                        flag='N';
+                        break;
+                        
+                    }else{
+                        qDebug()<<QString("YH_EC:COM%1 received check err").arg(port+2);
+                    }
+                }
+            }
+            if(0 == head_flag){
+                qDebug()<<QString("YH_EC:COM%1 received head not found").arg(port+2);
+            }
+        }
+        timecount++;
+        sleep(2);
+        }while (timecount<1&&flag=="D") ;
+        CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
+    #ifdef _TEST
+            qDebug()<<QString("YH_EC:COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
+    #endif
+#endif
+}
+/*立天电导率C60RS*/
+void myAPI::Protocol_30(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen){
+#ifdef _DEBUG
+    double rtd=0;
+    rtd = 10.0;    
+    CacheDataProc(rtd,0,"N",Dec,Name,Code,Unit);
+#else
+    #ifdef _TEST
+        static int SendCNT = 0;
+        static int SendSuccessCNT = 0;
+        static int SendZeroCNT = 0;
+        static int SendNegativeCNT = 0;
+    #endif
+        double rtd=0;
+        QString flag="D";
+        QByteArray readbuf;
+        QByteArray sendbuf;
+        int head_flag = 0;
+        int check=0;
+        int iLoop,len;
+        //volatile char s[4];
+        int timecount=0;
+        sendbuf.resize(8);
+        sendbuf[0]=Address;
+        sendbuf[1]=0x03;
+        sendbuf[2]=0x00;
+        sendbuf[3]=0x00;
+        sendbuf[4]=0x00;
+        sendbuf[5]=0x02;
+        check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+        sendbuf[6]=(char)(check);
+        sendbuf[7]=(char)(check>>8);
+    
+       do{
+        myCom[port]->write(sendbuf);
+        myCom[port]->flush();
+    #ifdef _TEST
+            SendCNT++;
+    #endif
+        qDebug()<<QString("LT_EC:COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+        sleep(2);
+        readbuf=myCom[port]->readAll();
+        qDebug()<<QString("LT_EC:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+        len = readbuf.length();
+        if(readbuf.length() >= DataLen + 5){
+            for(iLoop = 0; iLoop <= len - DataLen - 5; iLoop++){
+                if(Address==readbuf[iLoop] && 0x03==readbuf[iLoop+1] && DataLen==readbuf[iLoop+2])
+                {
+                    head_flag = 1;
+                    check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,DataLen + 3);
+                    if((readbuf[iLoop + DataLen + 3]==(char)(check&0xff))&&(readbuf[iLoop + DataLen + 4]==(char)(check>>8)))
+                    {
+                        //rtd = (readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])/1000 + ((readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])%1000)/1000.000;
+                    #ifdef _TEST
+                            if(rtd ==0){
+                                SendZeroCNT++;
+                            }else if(rtd < 0){
+                                SendNegativeCNT++;
+                            }
+                            SendSuccessCNT++;
+                    #endif
+                        flag='N';
+                        break;
+                        
+                    }else{
+                        qDebug()<<QString("LT_EC:COM%1 received check err").arg(port+2);
+                    }
+                }
+            }
+            if(0 == head_flag){
+                qDebug()<<QString("LT_EC:COM%1 received head not found").arg(port+2);
+            }
+        }
+        timecount++;
+        sleep(2);
+        }while (timecount<1&&flag=="D") ;
+        CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
+    #ifdef _TEST
+            qDebug()<<QString("LT_EC:COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
+    #endif
+#endif
+}
+
 double myAPI::HexToDouble(const unsigned char* bytes)
 {
     quint64 data1 = bytes[0];
@@ -3348,6 +3520,12 @@ void myAPI::MessageFromCom(int port)
             break;
         case 27://三泽电导率
             Protocol_28(port,Address,Decimals,Name,Code,Unit,SZ_PH_AND_EC_DATALEN);
+            break;
+        case 28://仪华电导率GPC68
+            Protocol_29(port,Address,Decimals,Name,Code,Unit,14);
+            break;
+        case 29://立天电导率C60RS
+            Protocol_30(port,Address,Decimals,Name,Code,Unit,4);
             break;
         default: break;
         }

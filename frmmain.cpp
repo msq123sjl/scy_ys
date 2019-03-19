@@ -1029,9 +1029,10 @@ void frmMain::Status()
             //排水阀门异常
             if(Valve_RightStatus==IsOpen){
                 str_tmp="OriginalPer2=100;";
-            }
-            else{
+            }else if(Valve_RightStatus==IsClose){
                 str_tmp="OriginalPer2=0;";
+            }else{
+                str_tmp="OriginalPer2=--;";
             }
             myAPI *api=new myAPI;
             api->Insert_Message_VSErr(3053,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),str_tmp);
@@ -1044,9 +1045,10 @@ void frmMain::Status()
             //集水阀门异常
             if(Catchment_RightStatus==IsOpen){
                 str_tmp="OriginalPer1=100;";
-            }
-            else{
+            }else if(Catchment_RightStatus==IsClose){
                 str_tmp="OriginalPer2=0;";
+            }else{
+                str_tmp="OriginalPer2=--;";
             }
             myAPI *api=new myAPI;
             api->Insert_Message_VSErr(3053,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),str_tmp);

@@ -84,6 +84,8 @@ private:
     void Protocol_26(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
     void Protocol_27(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
     void Protocol_28(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
+    void Protocol_29(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
+    void Protocol_30(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
 
     bool Get_Sampler_Status();
     bool Get_Bottle_Status();
