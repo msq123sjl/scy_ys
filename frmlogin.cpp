@@ -58,7 +58,6 @@ void frmlogin::on_btnLogin_clicked()
         myHelper::ShowMessageBoxError("用户名和密码不能为空,请重新输入!");
         return;
     }
-
     QString sql;
     QSqlQuery query;
     sql = "select [UserPwd],[UserType] from [UserInfo]  where [UserName]='"+UserName+"'";

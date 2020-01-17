@@ -82,6 +82,7 @@ void frmconfig::on_btn_parameter_clicked()
     while(query.next()){
         ui->comboBox_protocol->addItem(query.value(0).toString());
     }
+
     query.exec("select * from [Unit]");
     while(query.next()){
         ui->comboBox_unit->addItem(query.value(0).toString());
@@ -846,7 +847,8 @@ void frmconfig::on_btn_SaveIo_clicked()
     break;
     case 7: myApp::Out_drain_open=25;
     break;
-    default:break;
+    default: myApp::Out_drain_open=26;
+    break;
     }
     //关排水口
     switch (ui->comboOut_drain_close->currentIndex()){
@@ -866,7 +868,8 @@ void frmconfig::on_btn_SaveIo_clicked()
     break;
     case 7: myApp::Out_drain_close=25;
     break;
-    default:break;
+    default: myApp::Out_drain_close=26;
+    break;
     }
     //开集水池
     switch (ui->comboOut_catchment_open->currentIndex()){
@@ -886,7 +889,8 @@ void frmconfig::on_btn_SaveIo_clicked()
     break;
     case 7: myApp::Out_catchment_open=25;
     break;
-    default:break;
+    default: myApp::Out_catchment_open=26;
+    break;
     }
     //关集水池
     switch (ui->comboOut_catchment_close->currentIndex()){
@@ -906,7 +910,8 @@ void frmconfig::on_btn_SaveIo_clicked()
     break;
     case 7: myApp::Out_catchment_close=25;
     break;
-    default:break;
+    default: myApp::Out_catchment_close=26;
+    break;
     }
 
     //回流泵控制

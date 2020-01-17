@@ -32,6 +32,8 @@ double myApp::COD_Rtd = 0;
 double myApp::PH_Rtd = 0;
 double myApp::EC_Rtd = 0;
 
+float myApp::IaIgnroe = 4.1;
+
 QString myApp::AppPath="";
 int myApp::DeskWidth=800;
 int myApp::DeskHeigth=480;
@@ -228,6 +230,8 @@ void myApp::ReadConfig()
     myApp::COM3ToServerOpen=set->value("COM3ToServerOpen").toBool();
     myApp::Key=set->value("Key").toByteArray();
 
+    myApp::IaIgnroe=set->value("IaIgnroe").toFloat();
+    if(0 == myApp::IaIgnroe){myApp::IaIgnroe = 4.1;}
     set->endGroup();
     delete set;
 }
@@ -380,6 +384,7 @@ void myApp::WriteDefaultConfig()
     set->setValue("AutoUpdateOpen","true");
     set->setValue("AutoUpdateIP","192.168.1.200");
     set->setValue("COM3ToServerOpen","false");
+    set->setValue("IaIgnroe",4.1);
 
     set->endGroup();
     delete set;

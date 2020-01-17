@@ -1235,8 +1235,6 @@ void myAPI::SendData_Master(int CN,int flag)
         }
     }
 
-
-
     if(myApp::COM3ToServerOpen==true)
     {
         if(flag&0x01)
@@ -1273,27 +1271,36 @@ void myAPI::SendData_Master(int CN,int flag)
 }
 //**************************************************************************************
 //模拟采集电压转成实际值
-double myAPI::AnalogConvert(double adValue,double RangeUp,double RangeLow,QString Signal)
+int myAPI::AnalogConvert(double adValue,double RangeUp,double RangeLow,QString Signal,double *prealValue)
 {
-    double realValue=0;
-
+    double Ia = 0;
+    Ia = adValue*10;
     if(Signal=="4-20mA")
     {
-        realValue=(RangeUp-RangeLow)*(adValue*10-4)/16+RangeLow;
+        qDebug()<<QString("Ia:%1 myApp::IaIgnroe:%2").arg(Ia).arg(myApp::IaIgnroe);
+        if(Ia < 3.9){
+            *prealValue = 0;
+            return false;
+        }else if(Ia < myApp::IaIgnroe){
+            Ia = 4;
+        }else if(Ia > 20 && Ia < 21){
+            Ia = 20;
+        }else if(Ia >= 21 ){
+            *prealValue = 0;
+            return false;
+        }
+        *prealValue=(RangeUp-RangeLow)*(Ia-4)/16+RangeLow;
     }
     else if(Signal=="0-20mA"){
-        realValue=(RangeUp-RangeLow)*(adValue*10-0)/20+RangeLow;
+        *prealValue=(RangeUp-RangeLow)*(adValue*10-0)/20+RangeLow;
     }
     else if(Signal=="1-5V"){
-        realValue=(RangeUp-RangeLow)*(adValue-1)/4+RangeLow;
+        *prealValue=(RangeUp-RangeLow)*(adValue-1)/4+RangeLow;
     }
     else if(Signal=="0-5V"){
-        realValue=(RangeUp-RangeLow)*(adValue-0)/5+RangeLow;
+        *prealValue=(RangeUp-RangeLow)*(adValue-0)/5+RangeLow;
     }
-
-
-
-    return realValue;
+    return true;
 }
 
 //**************************************************************************************
@@ -1522,11 +1529,12 @@ int myAPI::Protocol_4_read(int port,int Address,double *rtd){
     sendbuf[7]=(char)(check);
 
     myCom[port]->readAll();
-    //qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
     myCom[port]->write(sendbuf);
     myCom[port]->flush();
     sleep(2);
     readbuf=myCom[port]->readAll();
+    debug_cnt = 1;
     if(1 == debug_cnt || myApp::Pro_Rain > 1){
         qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
     }
@@ -1823,8 +1831,6 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
 
 }
 
-
-
 //雨水刷卡设备
 void myAPI::Protocol_5(int port)
 {
@@ -1854,25 +1860,19 @@ void myAPI::Protocol_5(int port)
             if(Ex.indexIn(readbuf) != -1){
                 cardno=Ex.cap(1);
                 CacheCard(cardtype,cardno);
-                QString str_tmp=QString("DataTime=%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"));
-                QString dt=QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00");
-                str_tmp="DataTime="+QString("%1%2%3%4%5%6;")
-                            .arg(dt.mid(0,4))
-                            .arg(dt.mid(5,2))
-                            .arg(dt.mid(8,2))
-                            .arg(dt.mid(11,2))
-                            .arg(dt.mid(14,2))
-                            .arg(dt.mid(17,2));
                 if(cardtype=="1"){
-                    cardtype="maintain";
+                    cardtype="admin";
                 }
                 else if(cardtype=="2"){
-                    cardtype="admin";
+                    cardtype="maintain";
+                }
+                else if(cardtype=="3"){
+                    cardtype="enterprise";
                 }
                 else{
                     cardtype="other";
                 }
-                str_tmp+=QString("CardNo=%1;CardType=%2;Gate=ON").arg(cardno).arg(cardtype);
+                QString str_tmp=QString("CardNo=%1;CardType=%2;Gate=ON").arg(cardno).arg(cardtype);
                 Insert_Message_VSErr(3097,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),str_tmp);
 //                myApp::Cardrecord_FLG=1;
             }
@@ -1897,7 +1897,7 @@ void myAPI::Protocol_5(int port)
     else{
         myApp::DoorStatus="--";
     }
-
+    qDebug()<<QString("myApp::Door_FLG:")<<myApp::Door_FLG;
     if(myApp::Door_FLG){
         //发送开门协议
         readbuf=myCom[port]->readAll();
@@ -1994,8 +1994,6 @@ void myAPI::Protocol_5(int port)
         }
     }
 }
-
-
 
 
 //雨水采样仪
@@ -2605,8 +2603,7 @@ void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,Q
 
 
 //哈希氨氮
-
-void myAPI::Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit)
+void myAPI::Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double range_up,double range_low)
 {
     float rtd=0;
     double total=0;
@@ -2643,8 +2640,12 @@ void myAPI::Protocol_13(int port,int Address,int Dec,QString Name,QString Code,Q
                     s[2]=readbuf[6];
                     s[3]=readbuf[5];
                     rtd=*(float *)s;        //NH3-N
-                    flag='N';
-                    
+                    qDebug()<<QString("COM%1 rtd[%2] range_low[%3] range_up[%4]").arg(port+2).arg(rtd).arg(range_low).arg(range_up);
+                    if(rtd >= range_low && rtd <= range_up){
+                        flag='N';
+                    }else{
+                        rtd = 0;
+                    }
                 }
         }
     }
@@ -2893,7 +2894,7 @@ void myAPI::Protocol_25(int port,int Address,int Dec,QString Name,QString Code,Q
         int head_flag = 0;
         int check=0;
         int iLoop,len;
-        //volatile char s[4];
+        volatile char s[4];
         int timecount=0;
         sendbuf.resize(8);
         sendbuf[0]=Address;
@@ -2924,8 +2925,10 @@ void myAPI::Protocol_25(int port,int Address,int Dec,QString Name,QString Code,Q
                     head_flag = 1;
                     check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,DataLen + 3);
                     if((readbuf[iLoop + DataLen + 3]==(char)(check&0xff))&&(readbuf[iLoop + DataLen + 4]==(char)(check>>8)))
-                    {
-                        rtd = (readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])/1000 + ((readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])%1000)/1000.000;
+                    {                 
+                        s[0]=readbuf[iLoop + 3];
+                        s[1]=readbuf[iLoop + 4];
+                        rtd = ((s[0]<<8) + s[1])/1000.000;
                     #ifdef _TEST
                             if(rtd ==0){
                                 SendZeroCNT++;
@@ -3233,7 +3236,7 @@ void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,Q
         int head_flag = 0;
         int check=0;
         int iLoop,len;
-        //volatile char s[4];
+        volatile char s[4];
         int timecount=0;
         sendbuf.resize(8);
         sendbuf[0]=Address;
@@ -3241,7 +3244,7 @@ void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,Q
         sendbuf[2]=0x00;
         sendbuf[3]=0x00;
         sendbuf[4]=0x00;
-        sendbuf[5]=0x07;
+        sendbuf[5]=0x01;
         check = myHelper::CRC16_Modbus(sendbuf.data(),6);
         sendbuf[6]=(char)(check);
         sendbuf[7]=(char)(check>>8);
@@ -3253,7 +3256,14 @@ void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,Q
             SendCNT++;
     #endif
         qDebug()<<QString("YH_EC:COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
-        sleep(2);
+        sleep(2); 
+        /*qDebug()<<QString("YH_EC");
+        s[0]=sendbuf[iLoop + 0];
+        s[1]=sendbuf[iLoop + 1];
+        s[2]=0;
+        s[3]=0;
+        rtd=*(int *)s;
+        qDebug()<<QString("YH_EC send rtd[%1] s1[%2][%3]").arg(rtd).arg(s[1]*256 + s[0]).arg(sendbuf[iLoop + 2]*256 + sendbuf[iLoop + 1]);*/
         readbuf=myCom[port]->readAll();
         qDebug()<<QString("YH_EC:COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
         len = readbuf.length();
@@ -3265,7 +3275,12 @@ void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,Q
                     check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,DataLen + 3);
                     if((readbuf[iLoop + DataLen + 3]==(char)(check&0xff))&&(readbuf[iLoop + DataLen + 4]==(char)(check>>8)))
                     {
-                        //rtd = (readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])/1000 + ((readbuf[iLoop + 3]<<8 + readbuf[iLoop + 4])%1000)/1000.000;
+                        s[0]=readbuf[iLoop + 4];
+                        s[1]=readbuf[iLoop + 3];
+                        s[2]=0;
+                        s[3]=0;
+                        rtd=*(int *)s;
+                        qDebug()<<QString("YH_EC rtd[%1] s[%2]").arg(rtd).arg(s[1]*256 + s[0]);
                     #ifdef _TEST
                             if(rtd ==0){
                                 SendZeroCNT++;
@@ -3378,6 +3393,71 @@ void myAPI::Protocol_30(int port,int Address,int Dec,QString Name,QString Code,Q
 #endif
 }
 
+//水质COD
+void myAPI::Protocol_31(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double range_up,double range_low)
+{
+    float rtd=0;
+    double total=0;
+    QString flag="D";
+    QByteArray readbuf;
+    QByteArray sendbuf;
+    int check=0; 
+    int head_flag = 0;
+    char s[4];
+    int iLoop,len;
+    
+    sendbuf.resize(8);
+    sendbuf[0]=Address;
+    sendbuf[1]=0x03;
+    sendbuf[2]=0x00;
+    sendbuf[3]=0x04;
+    sendbuf[4]=0x00;
+    sendbuf[5]=0x02;
+    check = myHelper::CRC16_Modbus(sendbuf.data(),6);
+    sendbuf[6]=(char)(check);
+    sendbuf[7]=(char)(check>>8);
+    qDebug()<<QString("COM%1 send:").arg(port+2)<<sendbuf.toHex().toUpper();
+    myCom[port]->write(sendbuf);
+    sleep(3);
+    readbuf=myCom[port]->readAll();
+    qDebug()<<QString("COM%1 received:").arg(port+2)<<readbuf.toHex().toUpper();
+
+    len = readbuf.length();
+    if(len>=9){
+        for(iLoop = 0; iLoop <= len - 9; iLoop++){
+            
+            if(Address==readbuf[iLoop] && 0x03==readbuf[iLoop+1] && 0x04==readbuf[iLoop+2])
+            {
+                head_flag = 1;
+                check = myHelper::CRC16_Modbus(readbuf.data() + iLoop,7);
+                //CRC校验
+                if((readbuf[iLoop+7]==(char)(check&0xff))&&(readbuf[iLoop+8]==(char)(check>>8)))
+                { 
+                    s[0]=readbuf[5];
+                    s[1]=readbuf[6];
+                    s[2]=readbuf[3];
+                    s[3]=readbuf[4];
+                    rtd=*(float *)s;        //COD        
+                    qDebug()<<QString("COM%1 rtd[%2] range_low[%3] range_up[%4]").arg(port+2).arg(rtd).arg(range_low).arg(range_up);
+                    if(rtd >= range_low && rtd <= range_up){
+                        flag='N';
+                    }else{
+                        rtd = 0;
+                    }
+                }
+                else{
+                    qDebug()<<QString("COM%1 received check err").arg(port+2);
+                }
+                break;
+            }
+        }
+        if(0 == head_flag){
+            qDebug()<<QString("COM%1 received head not found").arg(port+2);
+        }
+    }
+    CacheDataProc(rtd,total,flag,Dec,Name,Code,Unit);
+}
+
 double myAPI::HexToDouble(const unsigned char* bytes)
 {
     quint64 data1 = bytes[0];
@@ -3422,6 +3502,8 @@ void myAPI::MessageFromCom(int port)
     QString  Unit;
     double alarm_max;
     double alarm_min;
+    double range_low;
+    double range_up;
 
     int Address;
     int Decimals;
@@ -3437,6 +3519,8 @@ void myAPI::MessageFromCom(int port)
         Decimals=query.value(15).toInt();
         alarm_max=query.value(9).toDouble();
         alarm_min=query.value(10).toDouble();
+        range_low=query.value(8).toDouble();
+        range_up=query.value(7).toDouble();
         //qDebug()<<QString("protocol[%1] Name[%2] Address[%3]").arg(query.value(5).toInt()).arg(Name).arg(Address);
         switch (query.value(5).toInt())//通讯协议
         {
@@ -3458,7 +3542,7 @@ void myAPI::MessageFromCom(int port)
         case 6://南控液位计
             Protocol_7(port,Address,Decimals,Name,Code,Unit,alarm_min,alarm_max);
         break;
-        case 7://CE9628JM流量计
+        case 7://CE9628JM流量计    //1
              Protocol_8(port,Decimals,Name,Code,Unit);
         break;
         case 8://PH-P206
@@ -3522,10 +3606,16 @@ void myAPI::MessageFromCom(int port)
             Protocol_28(port,Address,Decimals,Name,Code,Unit,SZ_PH_AND_EC_DATALEN);
             break;
         case 28://仪华电导率GPC68
-            Protocol_29(port,Address,Decimals,Name,Code,Unit,14);
+            Protocol_29(port,Address,Decimals,Name,Code,Unit,2);
             break;
         case 29://立天电导率C60RS
             Protocol_30(port,Address,Decimals,Name,Code,Unit,4);
+            break;
+        case 30://水质COD
+            Protocol_31(port,Address,Decimals,Name,Code,Unit,range_up,range_low);
+            break;
+        case 31://瑞泉RENQ-VI
+            Protocol_13(port,Address,Decimals,Name,Code,Unit,range_up,range_low);
             break;
         default: break;
         }

@@ -50,29 +50,34 @@ void frmValve::Delay_MSec(unsigned int msec)//非阻塞延时
 bool frmValve::Valve_Open_Set()
 {
     qDebug()<<QString("Valve Open start");
-    Valve_Close_Clear();
-    Set_Flag=true;
-    SwitchOut_On(myApp::Out_drain_open);
-    Valve_RightStatus=IsOpen;
-    int Valve_Set_Count=0;
-
-    while(Valve_CurrentStatus!=Valve_RightStatus)//判断控制结果
-    {
-        Valve_Set_Count++;
-        Delay_MSec(5000);
-        if(Valve_Set_Count>=60)//失败
-        {
-            Valve_Open_Clear();
-            Valve_Close_Clear();
-            qDebug()<<QString("Valve Open fail");
-            return false;
-        }
-    }
-    if(Valve_RightStatus==IsOpen){
-        Valve_Open_Clear();
-    }
-    if(Valve_RightStatus==IsClose){
+    if(myApp::Out_drain_close == 26){
+        qDebug()<<QString("Valve Open air valve");
+        SwitchOut_On(myApp::Out_drain_open);
+    }else{
         Valve_Close_Clear();
+        Set_Flag=true;
+        SwitchOut_On(myApp::Out_drain_open);
+        Valve_RightStatus=IsOpen;
+        int Valve_Set_Count=0;
+
+        while(Valve_CurrentStatus!=Valve_RightStatus)//判断控制结果
+        {
+            Valve_Set_Count++;
+            Delay_MSec(5000);
+            if(Valve_Set_Count>=60)//失败
+            {
+                Valve_Open_Clear();
+                Valve_Close_Clear();
+                qDebug()<<QString("Valve Open fail");
+                return false;
+            }
+        }
+        if(Valve_RightStatus==IsOpen){
+            Valve_Open_Clear();
+        }
+        if(Valve_RightStatus==IsClose){
+            Valve_Close_Clear();
+        }
     }
     qDebug()<<QString("Valve Open success");
     return true;
@@ -85,28 +90,33 @@ bool frmValve::Valve_Open_Set()
 bool frmValve::Valve_Close_Set()
 {
     qDebug()<<QString("Valve Close start");
-    Valve_Open_Clear();
-    Set_Flag=true;
-    SwitchOut_On(myApp::Out_drain_close);
-    Valve_RightStatus=IsClose;
-    int Valve_Set_Count=0;
-    while(Valve_CurrentStatus!=Valve_RightStatus)//判断控制结果
-    {
-        Valve_Set_Count++;
-        Delay_MSec(5000);
-        if(Valve_Set_Count>=60)//失败
-        {
-            Valve_Open_Clear();
-            Valve_Close_Clear();
-            qDebug()<<QString("Valve Close fail");
-            return false;
-        }
-    }
-    if(Valve_RightStatus==IsOpen){
+    if(myApp::Out_drain_close == 26){
+        qDebug()<<QString("Valve Close air valve");
+        SwitchOut_Off(myApp::Out_drain_open);
+    }else{
         Valve_Open_Clear();
-    }
-    if(Valve_RightStatus==IsClose){
-        Valve_Close_Clear();
+        Set_Flag=true;
+        SwitchOut_On(myApp::Out_drain_close);
+        Valve_RightStatus=IsClose;
+        int Valve_Set_Count=0;
+        while(Valve_CurrentStatus!=Valve_RightStatus)//判断控制结果
+        {
+            Valve_Set_Count++;
+            Delay_MSec(5000);
+            if(Valve_Set_Count>=60)//失败
+            {
+                Valve_Open_Clear();
+                Valve_Close_Clear();
+                qDebug()<<QString("Valve Close fail");
+                return false;
+            }
+        }
+        if(Valve_RightStatus==IsOpen){
+            Valve_Open_Clear();
+        }
+        if(Valve_RightStatus==IsClose){
+            Valve_Close_Clear();
+        }
     }
     qDebug()<<QString("Valve Close success");
     return true;
@@ -119,29 +129,34 @@ bool frmValve::Valve_Close_Set()
 bool frmValve::Catchment_Valve_Open_Set()
 {
     qDebug()<<QString("Catchment Valve Open start");
-    int   Catch_Set_Count=0;
-    Catchment_Valve_Close_Clear();
-    Catchment_Set_Flag=true;
-    SwitchOut_On(myApp::Out_catchment_open);
-    Catchment_RightStatus=IsOpen;
-
-    while(Catchment_CurrentStatus!=Catchment_RightStatus)//判断控制结果
-    {
-        Catch_Set_Count++;
-        Delay_MSec(5000);
-        if(Catch_Set_Count>=60)//失败
-        {
-            Catchment_Valve_Close_Clear();
-            Catchment_Valve_Open_Clear();
-            qDebug()<<QString("Catchment Valve Open fail");
-            return false;
-        }
-    }
-    if(Catchment_RightStatus==IsOpen){
-        Catchment_Valve_Open_Clear();
-    }
-    if(Catchment_RightStatus==IsClose){
+    if(myApp::Out_catchment_close == 26){
+        qDebug()<<QString("Catchment Valve Open air valve");
+        SwitchOut_On(myApp::Out_catchment_open);
+    }else{
+        int   Catch_Set_Count=0;
         Catchment_Valve_Close_Clear();
+        Catchment_Set_Flag=true;
+        SwitchOut_On(myApp::Out_catchment_open);
+        Catchment_RightStatus=IsOpen;
+
+        while(Catchment_CurrentStatus!=Catchment_RightStatus)//判断控制结果
+        {
+            Catch_Set_Count++;
+            Delay_MSec(5000);
+            if(Catch_Set_Count>=60)//失败
+            {
+                Catchment_Valve_Close_Clear();
+                Catchment_Valve_Open_Clear();
+                qDebug()<<QString("Catchment Valve Open fail");
+                return false;
+            }
+        }
+        if(Catchment_RightStatus==IsOpen){
+            Catchment_Valve_Open_Clear();
+        }
+        if(Catchment_RightStatus==IsClose){
+            Catchment_Valve_Close_Clear();
+        }
     }
     qDebug()<<QString("Catchment Valve Open success");
     return true;
@@ -153,29 +168,34 @@ bool frmValve::Catchment_Valve_Open_Set()
 bool frmValve::Catchment_Valve_Close_Set()
 {
     qDebug()<<QString("Catchment Valve close start");
-    Catchment_Valve_Open_Clear();
-    Catchment_Set_Flag=true;
-    SwitchOut_On(myApp::Out_catchment_close);
-    Catchment_RightStatus=IsClose;
-    int Catch_Set_Count=0;
-
-    while(Catchment_CurrentStatus!=Catchment_RightStatus)//判断控制结果
-    {
-        Catch_Set_Count++;
-        Delay_MSec(5000);
-        if(Catch_Set_Count>=60)//失败
-        {
-            Catchment_Valve_Close_Clear();
-            Catchment_Valve_Open_Clear();
-            qDebug()<<QString("Catchment Valve close fail");
-            return false;
-        }
-    }
-    if(Catchment_RightStatus==IsOpen){
+    if(myApp::Out_catchment_close == 26){
+        qDebug()<<QString("Catchment Valve close air valve");
+        SwitchOut_Off(myApp::Out_catchment_open);
+    }else{
         Catchment_Valve_Open_Clear();
-    }
-    if(Catchment_RightStatus==IsClose){
-        Catchment_Valve_Close_Clear();
+        Catchment_Set_Flag=true;
+        SwitchOut_On(myApp::Out_catchment_close);
+        Catchment_RightStatus=IsClose;
+        int Catch_Set_Count=0;
+
+        while(Catchment_CurrentStatus!=Catchment_RightStatus)//判断控制结果
+        {
+            Catch_Set_Count++;
+            Delay_MSec(5000);
+            if(Catch_Set_Count>=60)//失败
+            {
+                Catchment_Valve_Close_Clear();
+                Catchment_Valve_Open_Clear();
+                qDebug()<<QString("Catchment Valve close fail");
+                return false;
+            }
+        }
+        if(Catchment_RightStatus==IsOpen){
+            Catchment_Valve_Open_Clear();
+        }
+        if(Catchment_RightStatus==IsClose){
+            Catchment_Valve_Close_Clear();
+        }
     }
     qDebug()<<QString("Catchment Valve close success");
     return true;

@@ -99,7 +99,7 @@ QTableView{
      <enum>QFrame::NoFrame</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>8</number>
     </property>
     <widget class="QWidget" name="page">
      <widget class="QGroupBox" name="gbox_general">
@@ -3570,6 +3570,11 @@ QTableView{
           <string>S_OUT8</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>无</string>
+         </property>
+        </item>
        </widget>
        <widget class="QComboBox" name="comboOut_catchment_open">
         <property name="geometry">
@@ -3674,6 +3679,11 @@ QTableView{
         <item>
          <property name="text">
           <string>S_OUT8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>无</string>
          </property>
         </item>
        </widget>

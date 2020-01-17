@@ -114,8 +114,8 @@ QTableView{
    <widget class="QTableView" name="tableView">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>10</y>
+      <x>20</x>
+      <y>20</y>
       <width>550</width>
       <height>460</height>
      </rect>

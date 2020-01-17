@@ -37,7 +37,7 @@ public:
      void AddEventInfoUser(QString TriggerContent); 
      void MessageFromCom(int port);
      void ShowRtd();
-     double AnalogConvert(double adValue,double RangeUp,double RangeLow,QString Signal);
+     int AnalogConvert(double adValue,double RangeUp,double RangeLow,QString Signal,double *prealValue);
 
 
      void MinsDataProc_WaterFlow(QString startTime,QString endTime);
@@ -76,7 +76,7 @@ private:
     void Protocol_10(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
     void Protocol_11(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
     void Protocol_12(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3);
-    void Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit);
+    void Protocol_13(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double range_up,double range_low);
     void Protocol_14_Rtu(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int path);
     void Protocol_21(int port,int Dec,QString Name,QString Code,QString Unit,int COD_or_NH3,int equipment);
     void Protocol_23(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen,int Reg);
@@ -86,7 +86,7 @@ private:
     void Protocol_28(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
     void Protocol_29(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
     void Protocol_30(int port,int Address,int Dec,QString Name,QString Code,QString Unit,int DataLen);
-
+    void Protocol_31(int port,int Address,int Dec,QString Name,QString Code,QString Unit,double range_up,double range_low);
     bool Get_Sampler_Status();
     bool Get_Bottle_Status();
     bool Sample_current_all();

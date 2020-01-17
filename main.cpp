@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
         }
         QSqlQuery query;
         QString sql;
-
+        qDebug()<<QString("Version 4.4");
         sql="select count(*) from sqlite_master where type='table' ";
         query.exec(sql);
         if(query.next() && query.value(0).toInt() > 0){
@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
         }else{
             qDebug()<<QString("tab count err, quit!!!");
             system("rm -rf /mnt/sdcard/ys_scy.db-journal");
-            system("rm -rf /mnt/sdcard/ys_scy.db");
-            system("cp -f /mnt/sdcard/bak/ys_scy.db /mnt/sdcard/ys_scy.db");
-            system("echo bak[`date`] >> /mnt/nandflash/start.log");
+            //system("rm -rf /mnt/sdcard/ys_scy.db");
+            //system("cp -f /mnt/sdcard/bak/ys_scy.db /mnt/sdcard/ys_scy.db");
+            system("echo no bak[`date`] >> /mnt/nandflash/start.log");
             system("reboot -n");
             return 1;
         }
@@ -97,6 +97,4 @@ int main(int argc, char *argv[])
         api->AddEventInfoUser("系统启动运行");
         delete api;
         return a.exec();
-
-
 }

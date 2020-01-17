@@ -154,6 +154,8 @@ public:
     static  double  PH_Rtd;
     static  double  EC_Rtd;
 
+    static float IaIgnroe;
+
     static int Sample_Free;
     static int  Valve_cmd_status;
     static void WriteConfig();          //读取配置文件,在main函数最开始加载程序载入

@@ -367,7 +367,6 @@ void DB_Clear::run()
                             qDebug()<<query1.lastError();
                         }
                     query1.clear();
-
                 }
                 query.exec("VACUUM");
 
@@ -437,7 +436,9 @@ void SPI_Read_ad::run()
             }else{
                 IaValue = ad_value[Port];
             }
-            Rtd=api.AnalogConvert((double)IaValue,query.value(7).toDouble(),query.value(8).toDouble(),query.value(6).toString());
+            if(false ==api.AnalogConvert((double)IaValue,query.value(7).toDouble(),query.value(8).toDouble(),query.value(6).toString(),&Rtd)){
+                flag="D";
+            }
             api.CacheDataProc(Rtd,0,flag,Dec,Name,Code,Unit);
         }
         msleep(2000);
