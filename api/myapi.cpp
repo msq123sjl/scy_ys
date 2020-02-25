@@ -1779,7 +1779,7 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
 
 
     //qDebug()<<QString("COD In_level[%1]").arg(myApp::In_level);
-    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+    if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==false){
         return;
     }
     myApp Cod_Pro;
@@ -2338,7 +2338,7 @@ void myAPI::Protocol_10(int port,int Address,int Dec,QString Name,QString Code,Q
         }
     }
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
-    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+    if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==false){
         return;
     }
     //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;
@@ -2567,7 +2567,7 @@ void myAPI::Protocol_12(int port,int Address,int Dec,QString Name,QString Code,Q
         }
     }
     CacheDataProc(rtd,total,flag,Dec,Name,Code,Unit);
-     if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==true){
+     if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==true){
         return;
     }
     //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;
@@ -2720,8 +2720,8 @@ void myAPI::Protocol_14_Rtu(int port,int Address,int Dec,QString Name,QString Co
     }
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
 //添加TOC状态检测 空闲状态         myApp::TOC_Isok=true;
-    qDebug()<<QString("TOC In_level[%1]").arg(myApp::In_level);
-    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==false){
+    qDebug()<<QString("TOC In_level[%1]").arg(myApp::In_level_low);
+    if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==false){
         return;
     }
     qDebug()<<QString("TOC TOC_Flag[%1] TOC_Isok[%2]").arg(myApp::TOC_Flag).arg(myApp::TOC_Isok);
@@ -2782,7 +2782,7 @@ void myAPI::Protocol_21(int port,int Dec,QString Name,QString Code,QString Unit,
         }
     }
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
-    if(24 != myApp::In_level && GetSwitchStatus(myApp::In_level)==true){
+    if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==true){
         return;
     }
     //添加COD/NH3状态检测 空闲状态         myApp::COD_Isok=true;

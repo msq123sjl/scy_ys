@@ -85,7 +85,9 @@ void Control_Execute::rain_control()
 
 void Control_Execute::run() //处理控制线程
 {
+    bool first_flag = false;
     bool result;
+    int iLoop;
     stopped=false;
     myAPI *api=new myAPI;
     myApp *rain_pro=new myApp;
@@ -103,11 +105,15 @@ void Control_Execute::run() //处理控制线程
             frmValve *catchment=new frmValve;
             result=catchment->Catchment_Valve_Open_Set();
             api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,100,result,1,";");
-            sleep(myApp::catchmenttime*60);                       //时间界面上设定
+            if(26 != myApp::Out_catchment_open){
+                qDebug()<<QString("catchmenttime...");
+                sleep(myApp::catchmenttime*60);                       //时间界面上设定     
+            }
             //result=catchment->Catchment_Valve_Close_Set();
             //api->Insert_Message_Control(3052,5,QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:00"),1,0,result,1,";");
             delete catchment;
             rain_pro->PronumberChange(2);   //发生做样标识
+            first_flag = true;
             sleep(330); //等待做样完成
         }
 
@@ -135,10 +141,14 @@ void Control_Execute::run() //处理控制线程
                     qDebug()<<QString("EcOverproof:")<<str_tmp;
                     emit conrainsignal(2,2,1,1,str_tmp);   //发送留样关阀信号
                     rain_pro->PronumberChange(5);   //不合格
+                }else if(true == first_flag){
+                    rain_pro->PronumberChange(3);   //初次 恢复合格
+                    first_flag = false;
                 }
             }else {
                 if( 0 == myApp::cod_overproof && 0 == myApp::ph_overproof && 0 == myApp::ec_overproof){
-                    rain_pro->PronumberChange(3);   //恢复合格
+                    rain_pro->PronumberChange(3);   //恢复合格                  
+                    first_flag = false;
                 }
             }
         }
@@ -175,6 +185,33 @@ void Control_Execute::run() //处理控制线程
             Pro.PhOverproofChange(OTHER_OVER_CNT/2);
             Pro.EcOverproofChange(OTHER_OVER_CNT/2);
             //stopped=true;
+        }
+        
+        if(24 != myApp::In_level_high && 24 != myApp::In_level_low){
+            if(GetSwitchStatus(myApp::In_level_high)==true){//达到高水位
+                if(0 == myApp::Pro_Rain){
+                    for(iLoop=0;iLoop<5;iLoop++){
+                        sleep(1);
+                        if(GetSwitchStatus(myApp::In_level_high)==false){iLoop = 0;break;}
+                    }
+                    if(5 == iLoop){
+                        frmValve *valve =new frmValve;
+                        valve->Valve_Close_Set();
+                        delete valve;
+                        rain_pro->PronumberChange(1);   //初次降雨
+                    }
+                }
+            }else if(GetSwitchStatus(myApp::In_level_low)==true){//低于低水位
+                if(0 != myApp::Pro_Rain){
+                    for(iLoop=0;iLoop<5;iLoop++){
+                        sleep(1);
+                        if(GetSwitchStatus(myApp::In_level_high)==false){iLoop = 0;break;}
+                    }         
+                    if(5 == iLoop){
+                        rain_pro->PronumberChange(6);   //降雨结束
+                    }
+                }
+            }
         }
         sleep(5);
     }

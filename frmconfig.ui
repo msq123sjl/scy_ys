@@ -3307,17 +3307,111 @@ QTableView{
          </rect>
         </property>
         <property name="text">
-         <string>液位信号：</string>
+         <string>液位低信号：</string>
         </property>
         <property name="buddy">
-         <cstring>comboIn_yewei</cstring>
+         <cstring>comboIn_yewei_low</cstring>
         </property>
        </widget>
-       <widget class="QComboBox" name="comboIn_yewei">
+       <widget class="QComboBox" name="comboIn_yewei_low">
         <property name="geometry">
          <rect>
           <x>140</x>
           <y>310</y>
+          <width>151</width>
+          <height>31</height>
+         </rect>
+        </property>
+        <property name="currentIndex">
+         <number>12</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>S_IN1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN3</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN5</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN6</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN7</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN9</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN10</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN11</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>S_IN12</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>无液位</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QLabel" name="label_82">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>350</y>
+          <width>101</width>
+          <height>30</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>液位高信号：</string>
+        </property>
+        <property name="buddy">
+         <cstring>comboIn_yewei_low</cstring>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="comboIn_yewei_high">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>350</y>
           <width>151</width>
           <height>31</height>
          </rect>
@@ -3586,7 +3680,7 @@ QTableView{
          </rect>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <item>
          <property name="text">
@@ -3626,6 +3720,11 @@ QTableView{
         <item>
          <property name="text">
           <string>S_OUT8</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>无</string>
          </property>
         </item>
        </widget>

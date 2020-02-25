@@ -246,9 +246,13 @@ void frmconfig::on_btn_io_clicked()
         if(p_index>5)p_index-=2;
         ui->comboIn_power->setCurrentIndex(p_index);
 
-        p_index=myApp::In_level-10;
+        p_index=myApp::In_level_low-10;
         if(p_index>5)p_index-=2;
-        ui->comboIn_yewei->setCurrentIndex(p_index);
+        ui->comboIn_yewei_low->setCurrentIndex(p_index);
+
+        p_index=myApp::In_level_high-10;
+        if(p_index>5)p_index-=2;
+        ui->comboIn_yewei_high->setCurrentIndex(p_index);
 
         ui->stackedWidget_config->setCurrentIndex(8);
 }
@@ -1132,33 +1136,62 @@ void frmconfig::on_btn_SaveIo_clicked()
     break;
     default:break;
     }
-    //液位检测
-    switch (ui->comboIn_yewei->currentIndex()){
-    case 0: myApp::In_level=10;
+    //液位低检测
+    switch (ui->comboIn_yewei_low->currentIndex()){
+    case 0: myApp::In_level_low=10;
     break;
-    case 1: myApp::In_level=11;
+    case 1: myApp::In_level_low=11;
     break;
-    case 2: myApp::In_level=12;
+    case 2: myApp::In_level_low=12;
     break;
-    case 3: myApp::In_level=13;
+    case 3: myApp::In_level_low=13;
     break;
-    case 4: myApp::In_level=14;
+    case 4: myApp::In_level_low=14;
     break;
-    case 5: myApp::In_level=15;
+    case 5: myApp::In_level_low=15;
     break;
-    case 6: myApp::In_level=18;
+    case 6: myApp::In_level_low=18;
     break;
-    case 7: myApp::In_level=19;
+    case 7: myApp::In_level_low=19;
     break;
-    case 8: myApp::In_level=20;
+    case 8: myApp::In_level_low=20;
     break;
-    case 9: myApp::In_level=21;
+    case 9: myApp::In_level_low=21;
     break;
-    case 10: myApp::In_level=22;
+    case 10: myApp::In_level_low=22;
     break;
-    case 11: myApp::In_level=23;
+    case 11: myApp::In_level_low=23;
     break;
-    default: myApp::In_level=24;
+    default: myApp::In_level_low=24;
+    break;
+    }
+    //液位高检测
+    switch (ui->comboIn_yewei_high->currentIndex()){
+    case 0: myApp::In_level_high=10;
+    break;
+    case 1: myApp::In_level_high=11;
+    break;
+    case 2: myApp::In_level_high=12;
+    break;
+    case 3: myApp::In_level_high=13;
+    break;
+    case 4: myApp::In_level_high=14;
+    break;
+    case 5: myApp::In_level_high=15;
+    break;
+    case 6: myApp::In_level_high=18;
+    break;
+    case 7: myApp::In_level_high=19;
+    break;
+    case 8: myApp::In_level_high=20;
+    break;
+    case 9: myApp::In_level_high=21;
+    break;
+    case 10: myApp::In_level_high=22;
+    break;
+    case 11: myApp::In_level_high=23;
+    break;
+    default: myApp::In_level_high=24;
     break;
     }
     myApp::WriteIoConfig();

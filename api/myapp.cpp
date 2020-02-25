@@ -62,7 +62,8 @@ volatile int     myApp::In_catchment_close=13;
 volatile int     myApp::In_reflux_open=14;
 volatile int     myApp::In_reflux_close=15;
 volatile int     myApp::In_power=18;
-volatile int     myApp::In_level=24;  //24表示没有液位信号
+volatile int     myApp::In_level_low=24;  //24表示没有低液位信号
+volatile int     myApp::In_level_high=24;  //24表示没有高液位信号
 
 QString myApp::DoorStatus="OFF";
 QString myApp::LVStatus="Error";
@@ -479,8 +480,10 @@ void myApp::ReadIoConfig()
     myApp::In_reflux_open=set->value("In_reflux_open").toInt();
     myApp::In_reflux_close=set->value("In_reflux_close").toInt();
     myApp::In_power=set->value("In_power").toInt();
-    myApp::In_level=set->value("In_level").toInt();
-    if(0 == myApp::In_level){myApp::In_level = 24;}
+    myApp::In_level_low=set->value("In_level_low").toInt();
+    if(0 == myApp::In_level_low){myApp::In_level_low = 24;}
+    myApp::In_level_high=set->value("In_level_high").toInt();
+    if(0 == myApp::In_level_high){myApp::In_level_high = 24;}
     set->endGroup();
     delete set;
 }
@@ -503,7 +506,8 @@ void myApp::WriteIoConfig()//保存配置信息
     set->setValue("In_reflux_open",myApp::In_reflux_open);
     set->setValue("In_reflux_close",myApp::In_reflux_close);
     set->setValue("In_power",myApp::In_power);
-    set->setValue("In_level",myApp::In_level);
+    set->setValue("In_level_low",myApp::In_level_low);
+    set->setValue("In_level_high",myApp::In_level_high);
     set->endGroup();
     delete set;
 }

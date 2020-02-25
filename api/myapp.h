@@ -112,7 +112,8 @@ public:
     static volatile int     In_reflux_open;
     static volatile int     In_reflux_close;
     static volatile int     In_power;
-    static volatile int     In_level;
+    static volatile int     In_level_low;
+    static volatile int     In_level_high;
 
     static volatile bool Door_FLG;//=1需要开门
     static volatile bool Addcard_FLG;//=1需要开卡

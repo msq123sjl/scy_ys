@@ -129,6 +129,10 @@ bool frmValve::Valve_Close_Set()
 bool frmValve::Catchment_Valve_Open_Set()
 {
     qDebug()<<QString("Catchment Valve Open start");
+    if(26 == myApp::Out_catchment_open){
+        qDebug()<<QString("Catchment Valve Open no valve");
+        return true;
+    }
     if(myApp::Out_catchment_close == 26){
         qDebug()<<QString("Catchment Valve Open air valve");
         SwitchOut_On(myApp::Out_catchment_open);
@@ -168,6 +172,10 @@ bool frmValve::Catchment_Valve_Open_Set()
 bool frmValve::Catchment_Valve_Close_Set()
 {
     qDebug()<<QString("Catchment Valve close start");
+    if(26 == myApp::Out_catchment_open){
+        qDebug()<<QString("Catchment Valve close no valve");
+        return true;
+    }
     if(myApp::Out_catchment_close == 26){
         qDebug()<<QString("Catchment Valve close air valve");
         SwitchOut_Off(myApp::Out_catchment_open);
