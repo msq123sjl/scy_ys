@@ -193,22 +193,26 @@ void Control_Execute::run() //处理控制线程
                     for(iLoop=0;iLoop<5;iLoop++){
                         sleep(1);
                         if(GetSwitchStatus(myApp::In_level_high)==false){iLoop = 0;break;}
+                        qDebug()<<QString("高水位:%1").arg(iLoop);
                     }
                     if(5 == iLoop){
                         frmValve *valve =new frmValve;
                         valve->Valve_Close_Set();
                         delete valve;
                         rain_pro->PronumberChange(1);   //初次降雨
+                        qDebug()<<QString("降雨开始");
                     }
                 }
             }else if(GetSwitchStatus(myApp::In_level_low)==true){//低于低水位
                 if(0 != myApp::Pro_Rain){
                     for(iLoop=0;iLoop<5;iLoop++){
                         sleep(1);
-                        if(GetSwitchStatus(myApp::In_level_high)==false){iLoop = 0;break;}
+                        if(GetSwitchStatus(myApp::In_level_low)==false){iLoop = 0;break;}
+                        qDebug()<<QString("低水位:%1").arg(iLoop);
                     }         
                     if(5 == iLoop){
                         rain_pro->PronumberChange(6);   //降雨结束
+                        qDebug()<<QString("降雨结束");
                     }
                 }
             }

@@ -115,6 +115,10 @@ public:
     static volatile int     In_level_low;
     static volatile int     In_level_high;
 
+    static volatile int     cod_mode;
+    static volatile int     ph_mode;
+    static volatile int     ec_mode;
+
     static volatile bool Door_FLG;//=1需要开门
     static volatile bool Addcard_FLG;//=1需要开卡
     static volatile bool Deletecard_FLG;//=1需要销卡

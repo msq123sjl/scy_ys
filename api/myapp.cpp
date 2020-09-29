@@ -101,6 +101,13 @@ volatile int myApp::TOC_Isok=false;
 volatile int myApp::NH3_Flag=0;
 volatile int myApp::NH3_Isok=false;
 
+volatile int myApp::cod_mode = 6;
+volatile int myApp::ph_mode = 6;
+volatile int myApp::ec_mode = 6;
+
+
+
+
 QString myApp::CODSampleTime="00010101000000";
 
 int myApp::Sample_Free=0;

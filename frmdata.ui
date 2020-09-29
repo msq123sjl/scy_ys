@@ -195,22 +195,7 @@ QTableView{
     </property>
     <item>
      <property name="text">
-      <string>实时数据</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>分钟数据</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>小时数据</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>日数据</string>
+      <string>降雨数据</string>
      </property>
     </item>
    </widget>

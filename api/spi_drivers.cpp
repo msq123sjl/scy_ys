@@ -85,12 +85,12 @@ int spi_read_ad()
     int pos;
     static char first_flag = 0;
 
-    if( write(spi_fd, wr_buf, ARRAY_SIZE(wr_buf)) != ARRAY_SIZE(wr_buf))
+    if( write(spi_fd, wr_buf, sizeof(wr_buf)) != ARRAY_SIZE(wr_buf))
         perror("Write Error");
 
     sleep(1);
 
-    if( read(spi_fd, rd_buf, ARRAY_SIZE(rd_buf)) != ARRAY_SIZE(rd_buf)){
+    if( read(spi_fd, rd_buf, sizeof(rd_buf)) <= 0){
         perror("Read Error");
         return false;
     }else{

@@ -14,7 +14,7 @@
 #include "frmsampler.h"
 #include "frmvalve.h"
 #include "frmdiagnose.h"
-#include "frmcalibration.h"
+//#include "frmcalibration.h"
 #include "frmcod.h"
 #include<QProcess>
 #include <sys/socket.h>
@@ -96,7 +96,6 @@ frmMain::frmMain(QWidget *parent) :
     qDebug()<<QString("com5 id = %1").arg(u4.isRunning());
     qDebug()<<QString("com6 id = %1").arg(u5.isRunning());
     qDebug()<<QString("com7 id = %1").arg(u6.isRunning());
-
 
 }
 
@@ -181,7 +180,7 @@ void frmMain::InitForm()
     connect(ui->action_Import,SIGNAL(triggered()),this,SLOT(ShowForm()));
     connect(ui->action_Export,SIGNAL(triggered()),this,SLOT(ShowForm()));
     connect(ui->action_Diagnose,SIGNAL(triggered()),this,SLOT(ShowForm()));
-    connect(ui->action_Calibration,SIGNAL(triggered()),this,SLOT(ShowForm()));
+   // connect(ui->action_Calibration,SIGNAL(triggered()),this,SLOT(ShowForm()));
 }
 
 /*void frmMain::get_rain_signal()
@@ -425,8 +424,8 @@ void frmMain::ShowForm()
     if (triggerName=="action_Calibration"){           //模拟量校准
         if(myApp::Login){
             if(ad_version > 0){
-                frmcalibration *d=new frmcalibration();
-                d->showFullScreen();
+                //frmcalibration *d=new frmcalibration();
+                //d->showFullScreen();
             }else{
                 myHelper::ShowMessageBoxInfo(QObject::trUtf8("请升级AD板程序"));
             }

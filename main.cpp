@@ -14,6 +14,18 @@
 #include "frminput.h"
 #include "frmnum.h"
 
+/*struct list_name flag_string[8]
+{
+    {"停运"},
+    {"故障"},
+    {"维护"},
+    {"校准"},
+    {"校准"},
+    {"超限"},
+    {"正常"},
+    {"通讯异常"}
+};*/
+
 extern QSqlDatabase        DbConn;
 int main(int argc, char *argv[])
 {

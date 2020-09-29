@@ -69,7 +69,25 @@ void frmconfig::on_btn_general_clicked()
 
     ui->stackedWidget_config->setCurrentIndex(0);
 }
-
+/*********************************************
+ *读取在线仪表协议
+ *********************************************/
+void frmconfig::ReadProtolInfo(){
+    QString strAll;
+    QFile readfile(myApp::AppPath+"Protol.conf");
+    if(!readfile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return;
+    }
+    QTextStream stream(&readfile);
+    strAll=stream.readAll();
+    readfile.close();
+    QStringList strList;
+    strList=strAll.split("\n");
+    for(int iLoop=0;iLoop<strList.count();iLoop++)
+    {
+        ui->comboBox_protocol->addItem(strList.at(iLoop));
+    }
+}
 //切换到通道设置界面
 void frmconfig::on_btn_parameter_clicked()
 {
@@ -77,12 +95,13 @@ void frmconfig::on_btn_parameter_clicked()
     this->InitParaInfoModel();
     this->ReadParaInfo();
     //因子设置
-    QSqlQuery query;
+    this->ReadProtolInfo();
+    /*QSqlQuery query;
     query.exec("select * from [Protocol]");
     while(query.next()){
         ui->comboBox_protocol->addItem(query.value(0).toString());
-    }
-
+    }*/
+    QSqlQuery query;
     query.exec("select * from [Unit]");
     while(query.next()){
         ui->comboBox_unit->addItem(query.value(0).toString());
@@ -1192,6 +1211,40 @@ void frmconfig::on_btn_SaveIo_clicked()
     case 11: myApp::In_level_high=23;
     break;
     default: myApp::In_level_high=24;
+    break;
+    }
+
+    //COD模式
+    switch (ui->comboOut_cod_mode->currentIndex()){
+    case 0: myApp::cod_mode=6;
+    break;
+    case 1: myApp::cod_mode=3;
+    break;
+    case 2: myApp::cod_mode=1;
+    break;
+    default: myApp::cod_mode=6;
+    break;
+    }
+    //PH模式
+    switch (ui->comboOut_ph_mode->currentIndex()){
+    case 0: myApp::ph_mode=6;
+    break;
+    case 1: myApp::ph_mode=3;
+    break;
+    case 2: myApp::ph_mode=1;
+    break;
+    default: myApp::ph_mode=6;
+    break;
+    }
+    //EC模式
+    switch (ui->comboOut_ec_mode->currentIndex()){
+    case 0: myApp::ec_mode=6;
+    break;
+    case 1: myApp::ec_mode=3;
+    break;
+    case 2: myApp::ec_mode=1;
+    break;
+    default: myApp::ec_mode=6;
     break;
     }
     myApp::WriteIoConfig();

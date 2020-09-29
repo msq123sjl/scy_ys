@@ -85,6 +85,7 @@ private:
     void InitParaInfoModel();
     void ReadParaInfo();
 
+    void ReadProtolInfo();
 };
 
 #endif // FRMCONFIG_H

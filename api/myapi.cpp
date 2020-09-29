@@ -1467,7 +1467,13 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
                 s[2]=myHelper::HexStrValue(readbuf[7],readbuf[8]);
                 s[3]=myHelper::HexStrValue(readbuf[5],readbuf[6]);
                 rtd=*(float *)s;        //瞬时电导率
-                flag='N';
+                if(3 == myApp::ec_mode){
+                    flag='C';
+                }else if(1 == myApp::ec_mode){
+                    flag='D';
+                }else{
+                    flag='N';
+                }
                 myApp Ec_Pro;
                 if(myApp::Pro_Rain>=2 && myApp::Pro_Rain<6){               
                     qDebug()<<QString("ec_rtd[%1] alarm_max[%2]").arg(rtd).arg(alarm_max);
@@ -1492,6 +1498,7 @@ void myAPI::Protocol_3(int port,int Address,int Dec,QString Name,QString Code,QS
         }
         timecount++;
     }while (timecount<5 && flag=="D") ;
+
     CacheDataProc(rtd,0,flag,Dec,Name,Code,Unit);
     #ifdef _TEST
     qDebug()<<QString("Lt_EC:COM%1[SendZeroCNT:%2,SendNegativeCNT:%3,SendSuccessCNT:%4,SendCNT:%5]").arg(port+2).arg(SendZeroCNT).arg(SendNegativeCNT).arg(SendSuccessCNT).arg(SendCNT);    
@@ -1771,7 +1778,13 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
     int iLoop;
 //状态读取
     if(1 == Protocol_4_read(port, Address, &rtd)){
-        flag='N';
+        if(3 == myApp::cod_mode){
+            flag='C';
+        }else if(1 == myApp::cod_mode){
+            flag='D';
+        }else{
+            flag='N';
+        }
     }else{
         flag='D';
     }
@@ -1779,9 +1792,9 @@ void myAPI::Protocol_4(int port,int Address,int Dec,QString Name,QString Code,QS
 
 
     //qDebug()<<QString("COD In_level[%1]").arg(myApp::In_level);
-    if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==false){
+    /*if(24 != myApp::In_level_low && GetSwitchStatus(myApp::In_level_low)==false){
         return;
-    }
+    }*/
     myApp Cod_Pro;
     if(myApp::Pro_Rain>=2&&myApp::Pro_Rain<6)   //
     {
@@ -2248,7 +2261,13 @@ void myAPI::Protocol_9(int port,int Address,int Dec,QString Name,QString Code,QS
                     }
                     SendSuccessCNT++;
                 #endif
-                flag='N';
+                if(3 == myApp::ph_mode){
+                    flag='C';
+                }else if(1 == myApp::ph_mode){
+                    flag='D';
+                }else{
+                    flag='N';
+                }
                 
             }
         }
@@ -2937,7 +2956,13 @@ void myAPI::Protocol_25(int port,int Address,int Dec,QString Name,QString Code,Q
                             }
                             SendSuccessCNT++;
                     #endif
-                        flag='N';
+                        if(3 == myApp::ph_mode){
+                            flag='C';
+                        }else if(1 == myApp::ph_mode){
+                            flag='D';
+                        }else{
+                            flag='N';
+                        }
                         break;
                         
                     }else{
@@ -3289,7 +3314,13 @@ void myAPI::Protocol_29(int port,int Address,int Dec,QString Name,QString Code,Q
                             }
                             SendSuccessCNT++;
                     #endif
-                        flag='N';
+                        if(3 == myApp::ec_mode){
+                            flag='C';
+                        }else if(1 == myApp::ec_mode){
+                            flag='D';
+                        }else{
+                            flag='N';
+                        }
                         break;
                         
                     }else{
@@ -3371,7 +3402,13 @@ void myAPI::Protocol_30(int port,int Address,int Dec,QString Name,QString Code,Q
                             }
                             SendSuccessCNT++;
                     #endif
-                        flag='N';
+                        if(3 == myApp::ec_mode){
+                            flag='C';
+                        }else if(1 == myApp::ec_mode){
+                            flag='D';
+                        }else{
+                            flag='N';
+                        }
                         break;
                         
                     }else{

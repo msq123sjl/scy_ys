@@ -30,6 +30,7 @@ void Message::RequestRespond(int QnRtn,QextSerialPort *com,QTcpSocket *tcp)
     if(com!=NULL){
         com->write(str.toAscii());
     }else if(tcp!=NULL){
+        qDebug()<<QString("RequestRespond%1").arg(str);
         tcp->write(str.toAscii());
         tcp->flush();
     }
@@ -734,18 +735,24 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     api.Update_Respond(QN,From);   //更新处理标志
     int crc=myHelper::CRC16_GB212(&str.toLatin1().data()[6],len-12);
     sprintf(ch.data(),"%.4X",crc);
-    if(str.right(6).left(4)!=QString(ch))return -1;
-
+    if(str.right(6).left(4)!=QString(ch)){
+        qDebug()<<QString("messageProc CRC ERR[%1][%2]").arg(str.right(6).left(4)).arg(crc);
+        /*return -1;*/}
+    
     Ex.setPattern(str_MN);
     if(Ex.indexIn(str) != -1){
-        if(Ex.cap(1)!=myApp::MN)return -1;
+        if(Ex.cap(1)!=myApp::MN){
+        qDebug()<<QString("messageProc MN ERR");
+        return -1;}
     }
     else{
+        qDebug()<<QString("messageProc MN null");
         return -1;
     }
+    qDebug()<<QString("CN[%1]").arg(CN);
     switch (CN)
     {
-
+    
     case CN_SetAlarmTime:
 
         Ex.setPattern(str_Flag);
@@ -1227,6 +1234,7 @@ int Message::messageProc(QString str,QextSerialPort *com,QTcpSocket *tcp)
     }
     case CN_Valve_control:
     {
+        qDebug()<<QString("CN_Valve_control");
         Ex.setPattern(str_Flag);
         if(Ex.indexIn(str) != -1){
             if(Ex.cap(1).toInt()&0x01){//Flag=1
